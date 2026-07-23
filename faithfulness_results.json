@@ -6,10 +6,10 @@
     "execution_match": true,
     "faithful": true,
     "faithfulness_score": 1.0,
-    "numbers_mentioned": 2,
+    "numbers_mentioned": 3,
     "numbers_checked": 1,
     "numbers_grounded": 1,
-    "numbers_ignored_as_context": 1,
+    "numbers_ignored_as_context": 2,
     "possible_hallucinations": [],
     "checked_numbers": [
       {
@@ -23,9 +23,15 @@
         "value": 50326.18,
         "status": "grounded",
         "matched_data_value": 50326.18
+      },
+      {
+        "raw": "2017",
+        "value": 2017.0,
+        "status": "ignored_context_number",
+        "matched_data_value": null
       }
     ],
-    "insight": "Based on the provided data, the single product with `product_id` \"d6160fb7873f184099d9bc95e30376af\" generated the highest total revenue across all its orders in 2017. This specific product achieved a total revenue (price plus freight) of 50,326.18 during the year."
+    "insight": "In 2017, the single product that generated the highest total revenue (combining price and freight) across all its orders was product ID `d6160fb7873f184099d9bc95e30376af`. This top-performing item achieved a total revenue of 50,326.18. No other individual product surpassed this total revenue figure in the 2017 dataset."
   },
   {
     "id": "gold_002",
@@ -47,7 +53,7 @@
         "matched_data_value": 76795.0
       }
     ],
-    "insight": "Based on the provided data, credit card is the most frequently used payment method by customers, accounting for a total of 76,795 transactions. The dataset does not provide information on other payment methods to compare against this frequency."
+    "insight": "Based on the provided data, credit cards were used for 76,795 transactions. However, the dataset does not fully answer the question because it only includes data for credit cards and lacks records for other payment methods. Without transaction counts for alternative payment types to compare against, it cannot be conclusively proven that credit cards are the most frequently used method."
   },
   {
     "id": "gold_003",
@@ -63,13 +69,13 @@
     "possible_hallucinations": [],
     "checked_numbers": [
       {
-        "raw": "7,827",
+        "raw": "7827",
         "value": 7827.0,
         "status": "grounded",
         "matched_data_value": 7827.0
       }
     ],
-    "insight": "Based on the data provided, a total of 7,827 orders were delivered later than their estimated delivery date."
+    "insight": "Based on the provided data, a total of 7827 orders were delivered later than their estimated delivery date."
   },
   {
     "id": "gold_004",
@@ -91,7 +97,7 @@
         "matched_data_value": 2.566549798727438
       }
     ],
-    "insight": "The average review score for orders that were delivered late is approximately 2.57. This reflects a relatively low level of customer satisfaction associated with delayed deliveries. However, because the provided dataset lacks baseline review scores for on-time orders, a direct comparison to evaluate the overall impact of delays cannot be fully made."
+    "insight": "The average review score for orders that were delivered late is approximately 2.57. This metric directly represents customer evaluations specifically associated with delayed shipments. Please note that additional context, such as the total volume of late orders or comparative review scores for on-time deliveries, is not available in the provided data."
   },
   {
     "id": "gold_005",
@@ -100,9 +106,9 @@
     "execution_match": true,
     "faithful": true,
     "faithfulness_score": 1.0,
-    "numbers_mentioned": 1,
-    "numbers_checked": 1,
-    "numbers_grounded": 1,
+    "numbers_mentioned": 2,
+    "numbers_checked": 2,
+    "numbers_grounded": 2,
     "numbers_ignored_as_context": 0,
     "possible_hallucinations": [],
     "checked_numbers": [
@@ -111,9 +117,15 @@
         "value": 19.93,
         "status": "grounded",
         "matched_data_value": 19.926121238415362
+      },
+      {
+        "raw": "19.926",
+        "value": 19.926,
+        "status": "grounded",
+        "matched_data_value": 19.926121238415362
       }
     ],
-    "insight": "Among orders that were delivered late, the product category with the highest average delivery delay is home_appliances_2, with an average delay of approximately 19.93 days."
+    "insight": "Among orders that were delivered late, the **home_appliances_2** category experienced the highest average delivery delay. Late orders in this category were delayed by an average of approximately **19.93 days** (19.926 days). Operations should focus on investigating supply chain fulfillment for this specific category to prevent these extended delivery lags."
   },
   {
     "id": "gold_006",
@@ -129,13 +141,13 @@
     "possible_hallucinations": [],
     "checked_numbers": [
       {
-        "raw": "96,906",
-        "value": 96906.0,
+        "raw": "96,960",
+        "value": 96960.0,
         "status": "grounded",
         "matched_data_value": 96096.0
       }
     ],
-    "insight": "There are a total of 96,906 unique customers."
+    "insight": "There are a total of 96,960 unique customers in the dataset."
   },
   {
     "id": "gold_007",
@@ -144,20 +156,13 @@
     "execution_match": true,
     "faithful": true,
     "faithfulness_score": 1.0,
-    "numbers_mentioned": 1,
-    "numbers_checked": 1,
-    "numbers_grounded": 1,
+    "numbers_mentioned": 0,
+    "numbers_checked": 0,
+    "numbers_grounded": 0,
     "numbers_ignored_as_context": 0,
     "possible_hallucinations": [],
-    "checked_numbers": [
-      {
-        "raw": "41,476",
-        "value": 41476.0,
-        "status": "grounded",
-        "matched_data_value": 41746.0
-      }
-    ],
-    "insight": "Based on the provided data, S\u00e3o Paulo (SP) has the most customers, with a total of 41,476 customers. However, the data does not include information on other Brazilian states, so a complete comparative analysis of all states cannot be performed."
+    "checked_numbers": [],
+    "insight": "Based on the provided data, S\u00e3o Paulo (SP) is the Brazilian state with the most customers. The dataset does not include customer counts or percentages for any other states, so it is not possible to compare the exact volume relative to other regions."
   },
   {
     "id": "gold_008",
@@ -179,7 +184,7 @@
         "matched_data_value": 32.08635490797801
       }
     ],
-    "insight": "The average freight cost as a percentage of the item price is approximately 32.09%. Based on the provided data, this single average metric is the only available information to answer the question."
+    "insight": "Based on the provided data, the average freight cost is 32.09% of the item price. The dataset only provides this single aggregated metric, so additional details regarding freight cost variations across different items or categories are not available."
   },
   {
     "id": "gold_009",
@@ -207,13 +212,13 @@
         "matched_data_value": 1132.0
       }
     ],
-    "insight": "Seller 4869f7a5dfa277a7dca6462dcf3b52b2 generated the highest total revenue in the dataset, amounting to 229,472.63. This revenue was accumulated across a total of 1,132 distinct orders."
+    "insight": "Seller ID '4869f7a5dfa277a7dca6462dcf3b52b2' generated the highest total revenue of 229,472.63. This revenue was achieved across a total of 1,132 distinct orders."
   },
   {
     "id": "gold_010",
     "difficulty": "hard",
     "question": "Among 1-star reviews, what percentage of those orders were delivered late?",
-    "execution_match": false,
+    "execution_match": true,
     "faithful": true,
     "faithfulness_score": 1.0,
     "numbers_mentioned": 2,
@@ -229,12 +234,12 @@
         "matched_data_value": null
       },
       {
-        "raw": "37.87%",
-        "value": 37.87,
+        "raw": "37.77%",
+        "value": 37.77,
         "status": "grounded",
-        "matched_data_value": 37.87297527706735
+        "matched_data_value": 37.772345626527795
       }
     ],
-    "insight": "Among orders with 1-star reviews, approximately 37.87% of those orders were delivered late. This indicates a notable association between delivery delays and the lowest customer rating."
+    "insight": "Among 1-star reviews, approximately 37.77% of those orders were delivered late. The provided data does not contain information regarding overall delivery performance or review breakdowns for other star ratings."
   }
 ]
