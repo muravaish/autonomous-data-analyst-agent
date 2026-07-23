@@ -234,11 +234,21 @@ A short 2-3 minute demo can follow this flow:
 7. Point out execution accuracy, faithfulness, and one real failure category.
 8. Download the business report.
 
+## CI/CD And Productionization Roadmap
+
+The repository includes a GitHub Actions CI workflow in `.github/workflows/ci.yml`. On every push or pull request, it installs dependencies, compiles the Python files, and runs the deterministic decision-enrichment step without making any Gemini API calls.
+
+Production-oriented next steps:
+
+- Dockerize the Streamlit app for portable deployment
+- Deploy the container to AWS App Runner, AWS ECS, Azure Container Apps, or Azure App Service
+- Replace local SQLite with PostgreSQL, Snowflake, Azure SQL, or another warehouse adapter
+- Use n8n for scheduled analysis workflows, such as weekly KPI reports and stakeholder notifications
+- Add GitHub Actions deployment jobs after Docker/cloud configuration is ready
+
 ## Future Improvements
 
 - Add dataset adapter files so the same architecture can support other datasets
-- Add Snowflake or PostgreSQL as an alternative execution backend
-- Dockerize the app for easier deployment
 - Add recommendation-specific gold labels and rule accuracy evaluation
 - Add richer conversational memory for multi-turn analysis
 - Add optional seller risk scoring as a small ML extension
@@ -246,3 +256,4 @@ A short 2-3 minute demo can follow this flow:
 ## Portfolio Summary
 
 This project demonstrates an agentic business analytics system that translates natural language into validated SQL, runs analysis on real e-commerce data, generates faithful insights, visualizes results, and converts findings into deterministic business recommendations.
+

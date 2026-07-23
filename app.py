@@ -22,6 +22,93 @@ SAMPLE_QUESTIONS = [
 FOLLOW_UP_MARKERS = ["them", "those", "that", "these", "top 5", "only", "from them"]
 
 
+THEME_CSS = """
+<style>
+:root {
+  --bg: #f6f7fb;
+  --panel: #ffffff;
+  --ink: #172033;
+  --muted: #667085;
+  --line: #e5e7eb;
+  --blue: #2563eb;
+  --teal: #0f766e;
+  --amber: #d97706;
+  --red: #dc2626;
+  --green: #15803d;
+}
+.stApp { background: var(--bg); color: var(--ink); }
+.block-container { padding-top: 1.5rem; padding-bottom: 2.5rem; max-width: 1400px; }
+[data-testid="stHeader"] { background: rgba(246,247,251,0.85); backdrop-filter: blur(10px); }
+[data-testid="stMetric"] {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px 16px;
+  box-shadow: 0 1px 2px rgba(16,24,40,.04);
+}
+[data-testid="stMetricLabel"] { color: var(--muted); }
+[data-testid="stMetricValue"] { color: var(--ink); font-size: 1.45rem; }
+.stTabs [data-baseweb="tab-list"] { gap: 8px; }
+.stTabs [data-baseweb="tab"] {
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 18px;
+}
+.stTabs [aria-selected="true"] { border-color: var(--blue); color: var(--blue); }
+.hero {
+  background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 58%, #0f766e 100%);
+  color: white;
+  padding: 26px 30px;
+  border-radius: 8px;
+  margin-bottom: 18px;
+  box-shadow: 0 18px 36px rgba(15,23,42,.18);
+}
+.hero h1 { margin: 0 0 8px 0; font-size: 2rem; line-height: 1.15; letter-spacing: 0; }
+.hero p { margin: 0; color: #dbeafe; font-size: 1rem; max-width: 950px; }
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 18px;
+  box-shadow: 0 1px 2px rgba(16,24,40,.04);
+  margin-bottom: 14px;
+}
+.panel h3 { margin: 0 0 10px 0; font-size: 1.05rem; letter-spacing: 0; }
+.callout {
+  border-radius: 8px;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  background: #ffffff;
+  margin-bottom: 14px;
+}
+.callout.high { border-left: 5px solid var(--red); background: #fff7f7; }
+.callout.medium { border-left: 5px solid var(--amber); background: #fffbeb; }
+.callout.low { border-left: 5px solid var(--green); background: #f0fdf4; }
+.callout h3 { margin: 0 0 6px 0; font-size: 1.1rem; letter-spacing: 0; }
+.callout p { margin: 4px 0; color: var(--ink); }
+.badge-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #3730a3;
+  border: 1px solid #c7d2fe;
+  font-size: .82rem;
+  font-weight: 600;
+}
+.badge.teal { background: #ecfdf5; color: #0f766e; border-color: #99f6e4; }
+.badge.amber { background: #fffbeb; color: #92400e; border-color: #fde68a; }
+.section-title { font-size: 1.05rem; font-weight: 700; margin: 18px 0 8px 0; color: var(--ink); }
+.small-muted { color: var(--muted); font-size: .9rem; }
+hr.soft { border: none; border-top: 1px solid var(--line); margin: 14px 0; }
+</style>
+"""
+
+
 def initial_state(question: str) -> dict:
     return {
         "question": question,
@@ -161,6 +248,8 @@ def merged_eval_table(eval_results: list[dict], faithfulness_results: list[dict]
             "difficulty": row.get("difficulty"),
             "execution_pass": bool(row.get("match")),
             "faithful": faithful_row.get("faithful"),
+            "recommendation_rule": row.get("recommendation_rule") or "",
+            "priority": row.get("priority") or "",
             "failure_category": row.get("failure_category") or "",
             "match_reason": row.get("match_reason"),
             "question": row.get("question"),
@@ -191,7 +280,7 @@ def build_report(state: dict) -> str:
     return f"""# Business Analysis Report
 
 ## Question
-{state.get('question', '')}
+{state.get('display_question') or state.get('question', '')}
 
 ## Generated SQL
 ```sql
@@ -219,32 +308,61 @@ def build_report(state: dict) -> str:
 """
 
 
+def render_badges(items: list[str], style: str = ""):
+    if not items:
+        st.markdown('<span class="small-muted">None detected</span>', unsafe_allow_html=True)
+        return
+    badges = "".join(f'<span class="badge {style}">{clean_label(item)}</span>' for item in items)
+    st.markdown(f'<div class="badge-row">{badges}</div>', unsafe_allow_html=True)
+
+
 def render_recommendation(state: dict):
-    priority = state.get("priority") or "None"
-    if priority == "High":
-        st.error(f"{state.get('recommendation')} - High Priority")
-    elif priority == "Medium":
-        st.warning(f"{state.get('recommendation')} - Medium Priority")
-    else:
-        st.success(f"{state.get('recommendation') or 'Monitor KPI'} - {priority} Priority")
-    st.write(state.get("recommendation_reason") or "No rule reason returned.")
-    st.markdown("**Recommended action**")
-    st.write(state.get("recommended_action") or "No action returned.")
+    priority = state.get("priority") or "Low"
+    level = priority.lower() if priority in {"High", "Medium", "Low"} else "low"
+    st.markdown(
+        f"""
+        <div class="callout {level}">
+          <h3>{state.get('recommendation') or 'Monitor KPI'} <span class="small-muted">{priority} priority</span></h3>
+          <p>{state.get('recommendation_reason') or 'No rule reason returned.'}</p>
+          <hr class="soft" />
+          <p><strong>Recommended action:</strong> {state.get('recommended_action') or 'No action returned.'}</p>
+          <div class="badge-row"><span class="badge amber">{clean_label(state.get('recommendation_rule') or 'monitoring_rule')}</span></div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_panel(title: str, body: str):
+    st.markdown(f'<div class="panel"><h3>{title}</h3><p>{body}</p></div>', unsafe_allow_html=True)
 
 
 st.set_page_config(page_title="Autonomous Data Analyst Agent", layout="wide")
-st.title("Autonomous Data Analyst Agent")
-st.caption("Agentic e-commerce analytics with validated SQL, grounded insights, and deterministic business recommendations")
+st.markdown(THEME_CSS, unsafe_allow_html=True)
+st.markdown(
+    """
+    <div class="hero">
+      <h1>Autonomous Data Analyst Agent</h1>
+      <p>Agentic e-commerce analytics with validated SQL, grounded insights, deterministic recommendations, and evaluation-backed reliability.</p>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
 chat_tab, eval_tab = st.tabs(["Chat Analyst", "Evaluation Dashboard"])
 
 with chat_tab:
-    left, right = st.columns([0.66, 0.34])
+    left, right = st.columns([0.67, 0.33], gap="large")
 
     with left:
-        st.subheader("Ask a Business Question")
-        selected = st.selectbox("Try a sample question", [""] + SAMPLE_QUESTIONS)
-        typed_question = st.text_input("Question", value=selected, placeholder="Ask about revenue, reviews, sellers, delivery, freight, or cancellations")
+        st.markdown('<div class="section-title">Business Question</div>', unsafe_allow_html=True)
+        selected = st.selectbox("Sample question", [""] + SAMPLE_QUESTIONS, label_visibility="collapsed")
+        typed_question = st.text_input(
+            "Question",
+            value=selected,
+            placeholder="Ask about revenue, reviews, sellers, delivery, freight, or cancellations",
+            label_visibility="collapsed",
+        )
         run_clicked = st.button("Run Analysis", type="primary", use_container_width=True)
 
         if "chat_runs" not in st.session_state:
@@ -262,23 +380,30 @@ with chat_tab:
             if latest.get("error"):
                 st.error(latest["error"])
 
-            st.markdown("#### Business Recommendation")
+            top_metrics = st.columns(4)
+            top_metrics[0].metric("Rows", latest.get("row_count", 0))
+            top_metrics[1].metric("Difficulty", latest.get("difficulty_label") or "Unknown")
+            top_metrics[2].metric("Priority", latest.get("priority") or "Low")
+            top_metrics[3].metric("Chart", clean_label(latest.get("chart_type") or "None"))
+
+            st.markdown('<div class="section-title">Business Recommendation</div>', unsafe_allow_html=True)
             render_recommendation(latest)
 
-            st.markdown("#### Insight")
-            st.write(latest.get("insight") or "No insight returned.")
+            st.markdown('<div class="section-title">Insight</div>', unsafe_allow_html=True)
+            render_panel("Grounded narrative", latest.get("insight") or "No insight returned.")
 
-            with st.expander("Why this SQL was used", expanded=True):
+            st.markdown('<div class="section-title">Why This Query Was Used</div>', unsafe_allow_html=True)
+            with st.container(border=True):
                 for item in latest.get("sql_explanation", []):
                     st.write(f"- {item}")
 
-            st.markdown("#### Generated SQL")
+            st.markdown('<div class="section-title">Generated SQL</div>', unsafe_allow_html=True)
             st.code(latest.get("sql") or "", language="sql")
 
-            st.markdown("#### Result")
+            st.markdown('<div class="section-title">Result Table</div>', unsafe_allow_html=True)
             st.dataframe(result_dataframe(latest), use_container_width=True, hide_index=True)
 
-            st.markdown("#### Chart")
+            st.markdown('<div class="section-title">Chart</div>', unsafe_allow_html=True)
             render_chart_from_state(latest)
 
             st.download_button(
@@ -289,31 +414,32 @@ with chat_tab:
                 use_container_width=True,
             )
         else:
-            st.info("Run a question to see the SQL, result table, recommendation, insight, and chart.")
+            render_panel("Ready", "Ask a business question to generate SQL, run the analysis, review the recommendation, and export the report.")
 
     with right:
-        st.subheader("Confidence & Safety")
+        st.markdown('<div class="section-title">Confidence & Safety</div>', unsafe_allow_html=True)
         if st.session_state.get("chat_runs"):
             latest = st.session_state.chat_runs[0]
             safety = latest.get("safety_status") or {}
-            st.metric("Difficulty", latest.get("difficulty_label") or "Unknown")
-            st.metric("Rows Returned", latest.get("row_count", 0))
-            st.metric("Recommendation Rule", latest.get("recommendation_rule") or "None")
-            st.metric("Chart Type", latest.get("chart_type") or "None")
-            st.markdown("#### KPIs Detected")
-            st.write(", ".join(clean_label(k) for k in latest.get("detected_kpis", [])) or "None")
-            st.markdown("#### Safety Status")
-            st.json(safety)
+            with st.container(border=True):
+                st.metric("SQL Validation", safety.get("sql_validation", "Passed"))
+                st.metric("Rule Fired", clean_label(latest.get("recommendation_rule") or "None"))
+                st.metric("Plan", clean_label(latest.get("plan") or "Unknown"))
+                st.markdown("**KPIs detected**")
+                render_badges(latest.get("detected_kpis", []), "teal")
+                st.markdown("**Tables used**")
+                render_badges(safety.get("tables_used", []))
+
             with st.expander("Session Memory"):
                 for idx, run in enumerate(st.session_state.chat_runs[:5], start=1):
                     st.write(f"{idx}. {run.get('display_question') or run.get('question')}")
             with st.expander("Full latest state"):
                 st.json({k: v for k, v in latest.items() if k != "rows"})
         else:
-            st.write("No live run yet.")
+            render_panel("No run yet", "The safety panel will populate after the first analysis.")
 
 with eval_tab:
-    st.subheader("Saved Evaluation Results")
+    st.markdown('<div class="section-title">Evaluation Overview</div>', unsafe_allow_html=True)
     eval_results = load_json(EVAL_RESULTS_PATH)
     faithfulness_results = load_json(FAITHFULNESS_RESULTS_PATH)
 
@@ -333,16 +459,16 @@ with eval_tab:
             metric_cols[2].metric("Numeric Grounding", "Missing")
         metric_cols[3].metric("Gold Questions", execution["total"])
 
-        chart_cols = st.columns(3)
+        chart_cols = st.columns(3, gap="large")
         with chart_cols[0]:
-            st.markdown("#### Accuracy By Difficulty")
+            st.markdown('<div class="section-title">Accuracy By Difficulty</div>', unsafe_allow_html=True)
             diff_df = difficulty_dataframe(execution)
             if not diff_df.empty:
                 st.bar_chart(diff_df, x="difficulty", y="accuracy")
                 st.dataframe(diff_df, use_container_width=True, hide_index=True)
 
         with chart_cols[1]:
-            st.markdown("#### Failure Types")
+            st.markdown('<div class="section-title">Failure Types</div>', unsafe_allow_html=True)
             fail_df = failure_dataframe(execution["failures"])
             if fail_df.empty:
                 st.success("No execution failures in the saved file.")
@@ -351,18 +477,15 @@ with eval_tab:
                 st.dataframe(fail_df, use_container_width=True, hide_index=True)
 
         with chart_cols[2]:
-            st.markdown("#### Recommendation Rules")
+            st.markdown('<div class="section-title">Recommendation Rules</div>', unsafe_allow_html=True)
             rec_df = recommendation_rule_dataframe(eval_results)
             if not rec_df.empty:
                 st.bar_chart(rec_df, x="recommendation_rule", y="count")
                 st.dataframe(rec_df, use_container_width=True, hide_index=True)
 
-        st.markdown("#### Question-Level Results")
+        st.markdown('<div class="section-title">Question-Level Results</div>', unsafe_allow_html=True)
         table = merged_eval_table(eval_results, faithfulness_results)
         st.dataframe(table, use_container_width=True, hide_index=True)
 
         with st.expander("Raw result details"):
             st.json({"eval_results": eval_results, "faithfulness_results": faithfulness_results})
-
-
-
