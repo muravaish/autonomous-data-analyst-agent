@@ -22,6 +22,7 @@ The core idea is to answer three business questions in one workflow:
 - Gemini-powered SQL and insight generation
 - Schema-aware SQL validation before execution
 - Database adapter with local SQLite and Azure PostgreSQL support
+- Dockerized Streamlit app with Azure Container Apps deployment template
 - Plotly chart generation saved as HTML
 - Deterministic business rules layer for recommendations
 - Session memory for follow-up questions in Streamlit
@@ -241,6 +242,9 @@ python decision_enrichment.py
 | `faithfulness_harness.py` | Numeric faithfulness evaluation |
 | `decision_enrichment.py` | Adds business-rule fields to saved eval results |
 | `gold_qa.json` | Gold-standard evaluation questions |
+| `Dockerfile` | Container image definition for deployment |
+| `.github/workflows/deploy-azure.yml` | Manual Azure Container Apps deployment workflow |
+| `docs/azure-deployment.md` | Azure deployment guide |
 | `olist.db` | Local SQLite database for development mode |
 
 ## Demo Recording Script
@@ -256,17 +260,25 @@ A short 2-3 minute demo can follow this flow:
 7. Point out execution accuracy, faithfulness, and one real failure category.
 8. Download the business report.
 
-## CI/CD And Productionization Roadmap
+## CI/CD And Productionization
 
-The repository includes a GitHub Actions CI workflow in `.github/workflows/ci.yml`. On every push or pull request, it installs dependencies, compiles the Python files, and runs the deterministic decision-enrichment step without making any Gemini API calls.
+The repository includes a GitHub Actions CI workflow in `.github/workflows/ci.yml`. On every push or pull request, it installs dependencies, compiles the Python files, runs the deterministic decision-enrichment step without making any Gemini API calls, and validates that the Docker image builds.
 
-Production-oriented next steps:
+Production-ready pieces now included:
 
-- Dockerize the Streamlit app for portable deployment
-- Deploy the container to AWS App Runner, AWS ECS, Azure Container Apps, or Azure App Service
-- Use Azure Database for PostgreSQL through the included `db_adapter.py` connection layer
-- Use n8n for scheduled analysis workflows, such as weekly KPI reports and stakeholder notifications
-- Add GitHub Actions deployment jobs after Docker/cloud configuration is ready
+- Dockerfile for containerizing the Streamlit app
+- Docker Compose file for local container testing
+- Streamlit server configuration for container hosting
+- Azure PostgreSQL support through `db_adapter.py`
+- Manual Azure Container Apps deployment workflow in `.github/workflows/deploy-azure.yml`
+- Azure deployment guide in `docs/azure-deployment.md`
+
+Remaining production next steps:
+
+- Create the actual Azure resources in your Azure account
+- Load Olist tables into Azure Database for PostgreSQL
+- Add GitHub Actions secrets for Azure deployment
+- Add n8n or scheduled jobs for automated weekly KPI reports
 
 ## Future Improvements
 
@@ -278,4 +290,8 @@ Production-oriented next steps:
 ## Portfolio Summary
 
 This project demonstrates an agentic business analytics system that translates natural language into validated SQL, runs analysis on real e-commerce data, generates faithful insights, visualizes results, and converts findings into deterministic business recommendations.
+
+
+
+
 

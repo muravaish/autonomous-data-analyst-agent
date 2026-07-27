@@ -44,3 +44,6 @@ jobs:
 
       - name: Run deterministic decision enrichment
         run: python decision_enrichment.py
+      - name: Validate Docker image builds
+        run: docker build -t autonomous-data-analyst-agent:ci .
+

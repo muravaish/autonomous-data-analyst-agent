@@ -1,0 +1,15 @@
+﻿.git
+.github
+venv
+__pycache__
+.ipynb_checkpoints
+.env
+*.db
+charts/*.html
+data/*.csv
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.mypy_cache
+.DS_Store

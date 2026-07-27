@@ -1,0 +1,46 @@
+﻿name: Deploy Container To Azure
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Build and deploy Streamlit container
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Log in to Azure Container Registry
+        uses: azure/docker-login@v2
+        with:
+          login-server: ${{ secrets.ACR_LOGIN_SERVER }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      - name: Build and push image
+        run: |
+          IMAGE=${{ secrets.ACR_LOGIN_SERVER }}/autonomous-data-analyst-agent:${{ github.sha }}
+          docker build -t $IMAGE .
+          docker push $IMAGE
+          echo "IMAGE=$IMAGE" >> $GITHUB_ENV
+
+      - name: Deploy to Azure Container Apps
+        uses: azure/container-apps-deploy-action@v2
+        with:
+          imageToDeploy: ${{ env.IMAGE }}
+          containerAppName: ${{ secrets.AZURE_CONTAINER_APP_NAME }}
+          resourceGroup: ${{ secrets.AZURE_RESOURCE_GROUP }}
+          targetPort: 8501
+          ingress: external
+          environmentVariables: >-
+            GOOGLE_API_KEY=secretref:google-api-key
+            DATABASE_BACKEND=postgres
+            DATABASE_URL=secretref:database-url
+            DATABASE_SCHEMA=public

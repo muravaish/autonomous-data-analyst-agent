@@ -1,0 +1,14 @@
+﻿services:
+  analyst-app:
+    build: .
+    ports:
+      - "8501:8501"
+    env_file:
+      - .env
+    environment:
+      DATABASE_BACKEND: ${DATABASE_BACKEND:-sqlite}
+      SQLITE_DB_PATH: ${SQLITE_DB_PATH:-olist.db}
+      DATABASE_SCHEMA: ${DATABASE_SCHEMA:-public}
+    volumes:
+      - ./charts:/app/charts
+      - ./olist.db:/app/olist.db:ro
