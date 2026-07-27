@@ -1,5 +1,8 @@
 ﻿import base64
 import json
+import os
+import re
+import sqlite3
 from pathlib import Path
 
 import pandas as pd
@@ -13,6 +16,7 @@ BASE_DIR = Path(__file__).resolve().parent
 EVAL_RESULTS_PATH = BASE_DIR / "eval_results.json"
 FAITHFULNESS_RESULTS_PATH = BASE_DIR / "faithfulness_results.json"
 HERO_IMAGE_PATH = BASE_DIR / "assets" / "analytics-command-center.png"
+UPLOAD_DB_PATH = BASE_DIR / "session_uploads" / "uploaded_data.db"
 
 SAMPLE_QUESTIONS = [
     "What is the average review score for each payment type?",
@@ -271,6 +275,52 @@ def image_data_uri(path: Path) -> str:
     encoded = base64.b64encode(path.read_bytes()).decode("utf-8")
     return f"data:image/png;base64,{encoded}"
 
+def safe_sql_name(value: str, fallback: str = "uploaded_data") -> str:
+    cleaned = re.sub(r"[^0-9a-zA-Z_]+", "_", str(value).strip().lower()).strip("_")
+    if not cleaned:
+        cleaned = fallback
+    if cleaned[0].isdigit():
+        cleaned = f"col_{cleaned}"
+    return cleaned
+
+
+def clean_dataframe_columns(df: pd.DataFrame) -> pd.DataFrame:
+    seen: dict[str, int] = {}
+    columns = []
+    for idx, column in enumerate(df.columns):
+        base = safe_sql_name(column, f"column_{idx + 1}")
+        count = seen.get(base, 0)
+        seen[base] = count + 1
+        columns.append(base if count == 0 else f"{base}_{count + 1}")
+    df = df.copy()
+    df.columns = columns
+    return df
+
+
+def activate_default_database() -> None:
+    os.environ["DATABASE_BACKEND"] = "sqlite"
+    os.environ["SQLITE_DB_PATH"] = str(BASE_DIR / "olist.db")
+
+
+def activate_uploaded_database(uploaded_file) -> dict:
+    UPLOAD_DB_PATH.parent.mkdir(exist_ok=True)
+    df = pd.read_csv(uploaded_file)
+    df = clean_dataframe_columns(df)
+    table_name = "uploaded_data"
+
+    with sqlite3.connect(UPLOAD_DB_PATH) as conn:
+        df.to_sql(table_name, conn, if_exists="replace", index=False)
+
+    os.environ["DATABASE_BACKEND"] = "sqlite"
+    os.environ["SQLITE_DB_PATH"] = str(UPLOAD_DB_PATH)
+    return {
+        "name": uploaded_file.name,
+        "table": table_name,
+        "rows": len(df),
+        "columns": list(df.columns),
+        "db_path": str(UPLOAD_DB_PATH),
+    }
+
 def initial_state(question: str) -> dict:
     return {
         "question": question,
@@ -500,6 +550,12 @@ def render_panel(title: str, body: str):
 
 
 st.set_page_config(page_title="Autonomous Data Analyst Agent", layout="wide")
+if st.session_state.get("dataset_info"):
+    os.environ["DATABASE_BACKEND"] = "sqlite"
+    os.environ["SQLITE_DB_PATH"] = st.session_state.dataset_info["db_path"]
+else:
+    activate_default_database()
+
 st.markdown(THEME_CSS, unsafe_allow_html=True)
 hero_uri = image_data_uri(HERO_IMAGE_PATH)
 st.markdown(
@@ -526,7 +582,7 @@ st.markdown(
       <span class="status-chip"><span class="status-dot"></span>{get_database_backend()}</span>
       <span class="status-chip"><span class="status-dot"></span>{get_database_dialect()}</span>
       <span class="status-chip"><span class="status-dot"></span>10 gold checks</span>
-      <span class="status-chip"><span class="status-dot"></span>Docker + Azure</span>
+
     </div>
     """,
     unsafe_allow_html=True,
@@ -546,6 +602,34 @@ with chat_tab:
             """,
             unsafe_allow_html=True,
         )
+        uploaded_file = st.file_uploader("Upload CSV dataset", type=["csv"], label_visibility="collapsed")
+        if uploaded_file is not None:
+            signature = f"{uploaded_file.name}:{uploaded_file.size}"
+            if st.session_state.get("upload_signature") != signature:
+                try:
+                    st.session_state.dataset_info = activate_uploaded_database(uploaded_file)
+                    st.session_state.upload_signature = signature
+                    st.session_state.chat_runs = []
+                    st.session_state.draft_question = ""
+                    st.rerun()
+                except Exception as exc:
+                    st.error(f"Could not load CSV: {exc}")
+            else:
+                os.environ["DATABASE_BACKEND"] = "sqlite"
+                os.environ["SQLITE_DB_PATH"] = st.session_state.dataset_info["db_path"]
+
+        dataset_info = st.session_state.get("dataset_info")
+        if dataset_info:
+            st.caption(f"Dataset: {dataset_info['name']} | table `{dataset_info['table']}` | {dataset_info['rows']} rows")
+            if st.button("Use Olist sample", use_container_width=True):
+                st.session_state.pop("dataset_info", None)
+                st.session_state.pop("upload_signature", None)
+                st.session_state.chat_runs = []
+                activate_default_database()
+                st.rerun()
+        else:
+            st.caption("Dataset: Olist e-commerce sample")
+
         if "draft_question" not in st.session_state:
             st.session_state.draft_question = ""
 
@@ -689,14 +773,4 @@ with eval_tab:
 
         with st.expander("Raw result details"):
             st.json({"eval_results": eval_results, "faithfulness_results": faithfulness_results})
-
-
-
-
-
-
-
-
-
-
 

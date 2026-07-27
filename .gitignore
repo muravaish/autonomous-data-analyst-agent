@@ -5,3 +5,5 @@ __pycache__/
 .ipynb_checkpoints/
 charts/*.html
 data/*.csv
+session_uploads/
+
