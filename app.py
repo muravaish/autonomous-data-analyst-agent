@@ -6,6 +6,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 from agent_graph import build_graph
+from db_adapter import get_database_backend, get_database_dialect
 
 BASE_DIR = Path(__file__).resolve().parent
 EVAL_RESULTS_PATH = BASE_DIR / "eval_results.json"
@@ -349,6 +350,10 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+status_cols = st.columns(2)
+status_cols[0].caption(f"Database backend: {get_database_backend()}")
+status_cols[1].caption(f"SQL dialect: {get_database_dialect()}")
+
 chat_tab, eval_tab = st.tabs(["Chat Analyst", "Evaluation Dashboard"])
 
 with chat_tab:
@@ -489,3 +494,4 @@ with eval_tab:
 
         with st.expander("Raw result details"):
             st.json({"eval_results": eval_results, "faithfulness_results": faithfulness_results})
+

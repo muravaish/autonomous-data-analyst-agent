@@ -1,6 +1,6 @@
 ﻿# Autonomous Data Analyst + Decision Intelligence Agent
 
-An agentic e-commerce analytics app that converts plain-English business questions into validated SQL, runs the query on the Olist Brazilian E-Commerce SQLite database, generates a grounded business insight, creates an interactive chart, and recommends a business action using deterministic decision rules.
+An agentic e-commerce analytics app that converts plain-English business questions into validated SQL, runs the query on the Olist Brazilian E-Commerce database in local SQLite mode or Azure PostgreSQL mode, generates a grounded business insight, creates an interactive chart, and recommends a business action using deterministic decision rules.
 
 This project is intentionally different from a prediction dashboard. It is not centered on training a model. Instead, it demonstrates agentic analytics, SQL reasoning, evaluation, and decision support.
 
@@ -21,7 +21,7 @@ The core idea is to answer three business questions in one workflow:
 - LangGraph pipeline with explicit state between nodes
 - Gemini-powered SQL and insight generation
 - Schema-aware SQL validation before execution
-- SQLite execution against `olist.db`
+- Database adapter with local SQLite and Azure PostgreSQL support
 - Plotly chart generation saved as HTML
 - Deterministic business rules layer for recommendations
 - Session memory for follow-up questions in Streamlit
@@ -62,10 +62,10 @@ Final Answer + SQL + Table + Insight + Recommendation + Chart
 Classifies whether the business question is a single-query or multi-step analysis request.
 
 **SQL Agent**  
-Generates one SQLite query using only the known Olist schema and join rules.
+Generates one dialect-aware SQL query using the live database schema and Olist join rules.
 
 **Execution Agent**  
-Runs validated SQL against the local SQLite database and returns columns, rows, and row count.
+Runs validated SQL against the configured analytics database and returns columns, rows, and row count.
 
 **Insight Agent**  
 Writes a short narrative using only the actual returned query results.
@@ -174,7 +174,28 @@ Add your Gemini key to `.env`:
 GOOGLE_API_KEY=your_key_here
 ```
 
-Make sure `olist.db` is in the project root.
+## Azure/PostgreSQL Mode
+
+The app is Azure-ready through `db_adapter.py`. Local SQLite remains the default for development, but the same LangGraph pipeline can run against Azure Database for PostgreSQL after the Olist tables are loaded there.
+
+Local mode:
+
+```text
+DATABASE_BACKEND=sqlite
+SQLITE_DB_PATH=olist.db
+```
+
+Azure PostgreSQL mode:
+
+```text
+DATABASE_BACKEND=postgres
+DATABASE_URL=postgresql://username:password@your-server.postgres.database.azure.com:5432/your_database?sslmode=require
+DATABASE_SCHEMA=public
+```
+
+The SQL Agent automatically reads the live schema, switches the prompt dialect to PostgreSQL, validates table references, blocks non-read-only SQL, and executes through the same adapter interface.
+
+By default, make sure `olist.db` is in the project root. For Azure mode, configure the PostgreSQL settings below.
 
 Run the Streamlit app:
 
@@ -213,13 +234,14 @@ python decision_enrichment.py
 | File | Purpose |
 |---|---|
 | `agent_graph.py` | LangGraph pipeline and agent nodes |
+| `db_adapter.py` | Database adapter for local SQLite and Azure PostgreSQL |
 | `business_rules.py` | KPI detection and deterministic recommendation rules |
 | `app.py` | Streamlit chat app and evaluation dashboard |
 | `eval_harness.py` | Execution accuracy evaluation |
 | `faithfulness_harness.py` | Numeric faithfulness evaluation |
 | `decision_enrichment.py` | Adds business-rule fields to saved eval results |
 | `gold_qa.json` | Gold-standard evaluation questions |
-| `olist.db` | Local SQLite database |
+| `olist.db` | Local SQLite database for development mode |
 
 ## Demo Recording Script
 
@@ -242,7 +264,7 @@ Production-oriented next steps:
 
 - Dockerize the Streamlit app for portable deployment
 - Deploy the container to AWS App Runner, AWS ECS, Azure Container Apps, or Azure App Service
-- Replace local SQLite with PostgreSQL, Snowflake, Azure SQL, or another warehouse adapter
+- Use Azure Database for PostgreSQL through the included `db_adapter.py` connection layer
 - Use n8n for scheduled analysis workflows, such as weekly KPI reports and stakeholder notifications
 - Add GitHub Actions deployment jobs after Docker/cloud configuration is ready
 

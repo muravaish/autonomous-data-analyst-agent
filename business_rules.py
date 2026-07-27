@@ -112,7 +112,7 @@ def explain_sql(sql: str) -> list[str]:
         explanation.append("Sorts the result so the highest-priority records appear first.")
     if " limit " in lowered:
         explanation.append("Limits the output to the most relevant records for dashboard readability.")
-    return explanation or ["Runs a validated read-only query against the Olist SQLite database."]
+    return explanation or ["Runs a validated read-only query against the configured analytics database."]
 
 
 def add_recommendation(recommendations: list[dict[str, Any]], rule_id: str, metric: str, value: float, entity: str | None = None) -> None:
@@ -201,3 +201,4 @@ def evaluate_business_rules(question: str, columns: list[str], rows: list[tuple]
             "insight_grounding": "Checked by faithfulness harness for saved eval runs",
         },
     }
+

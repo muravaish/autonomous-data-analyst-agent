@@ -2,5 +2,6 @@
 langgraph==1.2.9
 pandas==3.0.3
 plotly==6.9.0
+psycopg[binary]==3.2.13
 python-dotenv==1.2.2
 streamlit==1.59.2

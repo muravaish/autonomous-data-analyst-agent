@@ -31,6 +31,7 @@ jobs:
             agent_graph.py \
             app.py \
             business_rules.py \
+            db_adapter.py \
             decision_enrichment.py \
             eval_harness.py \
             faithfulness_harness.py \
