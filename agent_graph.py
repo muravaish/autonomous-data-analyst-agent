@@ -311,38 +311,111 @@ def chart_agent_node(state: AgentState) -> AgentState:
     df = pd.DataFrame(state["rows"], columns=state["columns"])
     df.columns = [c.replace("_", " ").replace("(", "").replace(")", "").title() for c in df.columns]
 
-    # Simple heuristic for chart type based on result shape
+    # Convert date-like text columns so trend questions become line charts.
+    for col in df.columns:
+        col_lower = col.lower()
+        if any(token in col_lower for token in ["date", "month", "year", "time"]):
+            converted = pd.to_datetime(df[col], errors="coerce")
+            if converted.notna().sum() >= max(1, len(df) // 2):
+                df[col] = converted
+
     num_cols = df.select_dtypes(include="number").columns.tolist()
-    cat_cols = [c for c in df.columns if c not in num_cols]
+    date_cols = df.select_dtypes(include=["datetime64[ns]", "datetimetz"]).columns.tolist()
+    cat_cols = [c for c in df.columns if c not in num_cols and c not in date_cols]
 
     os.makedirs("charts", exist_ok=True)
     chart_path = os.path.join("charts", "latest_chart.html")
+    title = state.get("display_question") or state.get("question") or "Analysis Result"
 
     try:
-        if len(df) == 1:
-            # Single row -- a bar chart of its numeric values is more useful than a "chart"
-            if num_cols:
-                fig = px.bar(x=num_cols, y=[df.iloc[0][c] for c in num_cols],
-                             title="Result", labels={"x": "Metric", "y": "Value"})
-                chart_type = "single_row_bar"
-            else:
-                state["chart_path"] = None
-                state["chart_type"] = None
-                print("[CHART AGENT] Single non-numeric row -- no chart generated.")
-                return state
-        elif cat_cols and num_cols:
-            fig = px.bar(df, x=cat_cols[0], y=num_cols[0],
-                         title=f"{num_cols[0]} by {cat_cols[0]}")
-            chart_type = "bar"
-        elif len(num_cols) >= 2:
-            fig = px.scatter(df, x=num_cols[0], y=num_cols[1], title="Result")
+        if len(df) == 1 and num_cols:
+            metric_df = df[num_cols].T.reset_index()
+            metric_df.columns = ["Metric", "Value"]
+            fig = px.bar(
+                metric_df,
+                x="Metric",
+                y="Value",
+                title="KPI Snapshot",
+                text="Value",
+                labels={"Metric": "Metric", "Value": "Value"},
+            )
+            fig.update_traces(texttemplate="%{text:.2f}", textposition="outside")
+            chart_type = "kpi_bar"
+
+        elif date_cols and num_cols:
+            x_col = date_cols[0]
+            y_cols = num_cols[:3]
+            trend_df = df.sort_values(x_col)
+            fig = px.line(
+                trend_df,
+                x=x_col,
+                y=y_cols,
+                markers=True,
+                title=title,
+                labels={"value": "Value", "variable": "Metric"},
+            )
+            chart_type = "line"
+
+        elif len(num_cols) >= 2 and not cat_cols:
+            fig = px.scatter(
+                df,
+                x=num_cols[0],
+                y=num_cols[1],
+                size=num_cols[2] if len(num_cols) >= 3 else None,
+                title=title,
+                hover_data=df.columns,
+            )
             chart_type = "scatter"
+
+        elif len(num_cols) >= 2 and cat_cols:
+            x_col = cat_cols[0]
+            y_cols = num_cols[:3]
+            plot_df = df.sort_values(y_cols[0], ascending=False).head(15)
+            fig = px.bar(
+                plot_df,
+                x=x_col,
+                y=y_cols,
+                barmode="group",
+                title=title,
+                labels={"value": "Value", "variable": "Metric"},
+            )
+            chart_type = "grouped_bar"
+
+        elif cat_cols and num_cols:
+            x_col = cat_cols[0]
+            y_col = num_cols[0]
+            plot_df = df.sort_values(y_col, ascending=True).tail(15)
+            fig = px.bar(
+                plot_df,
+                x=y_col,
+                y=x_col,
+                orientation="h",
+                title=f"{y_col} by {x_col}",
+                labels={x_col: x_col, y_col: y_col},
+            )
+            chart_type = "horizontal_bar"
+
+        elif num_cols and len(df) > 1:
+            fig = px.histogram(
+                df,
+                x=num_cols[0],
+                nbins=min(30, max(8, len(df) // 2)),
+                title=f"Distribution of {num_cols[0]}",
+            )
+            chart_type = "histogram"
+
         else:
             state["chart_path"] = None
             state["chart_type"] = None
             print("[CHART AGENT] Result shape not chartable -- skipped.")
             return state
 
+        fig.update_layout(
+            template="plotly_white",
+            height=520,
+            margin=dict(l=60, r=30, t=70, b=70),
+            legend_title_text="Metric",
+        )
         fig.write_html(chart_path)
         state["chart_path"] = chart_path
         state["chart_type"] = chart_type
@@ -353,7 +426,6 @@ def chart_agent_node(state: AgentState) -> AgentState:
         print(f"[CHART AGENT] Chart generation failed: {e}")
 
     return state
-
 
 def end_with_error_node(state: AgentState) -> AgentState:
     print(f"\n[STOPPED] {state.get('error', 'Unknown error')}")
@@ -429,4 +501,5 @@ if __name__ == "__main__":
     print(f"Recommendation: {final_state.get('recommendation')} ({final_state.get('priority')})")
     print(f"Action: {final_state.get('recommended_action')}")
     print(f"Chart: {final_state['chart_path']}")
+
 
