@@ -111,6 +111,33 @@ THEME_CSS = """
   background: #eff6ff !important;
   border-color: var(--blue) !important;
 }
+[data-testid="stFileUploader"] {
+  background: #ffffff !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 8px !important;
+  padding: 12px 14px !important;
+  box-shadow: 0 1px 2px rgba(16,24,40,.04) !important;
+}
+[data-testid="stFileUploader"] section,
+[data-testid="stFileUploader"] section:hover {
+  background: #f8fafc !important;
+  border: 1px dashed #cbd5e1 !important;
+  border-radius: 8px !important;
+}
+[data-testid="stFileUploader"] button,
+[data-testid="stFileUploader"] button:hover,
+[data-testid="stFileUploader"] button:focus {
+  background: #ffffff !important;
+  color: var(--blue) !important;
+  border: 1px solid #bfdbfe !important;
+  border-radius: 8px !important;
+  font-weight: 700 !important;
+}
+[data-testid="stFileUploader"] small,
+[data-testid="stFileUploader"] span,
+[data-testid="stFileUploader"] p {
+  color: var(--muted) !important;
+}
 div[data-testid="stExpander"] details,
 div[data-testid="stExpander"] summary,
 div[data-testid="stExpander"] summary:hover {
@@ -773,4 +800,5 @@ with eval_tab:
 
         with st.expander("Raw result details"):
             st.json({"eval_results": eval_results, "faithfulness_results": faithfulness_results})
+
 
