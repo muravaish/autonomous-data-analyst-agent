@@ -91,6 +91,22 @@ THEME_CSS = """
   color: #ffffff !important;
   border-color: #1d4ed8 !important;
 }
+.stDownloadButton > button,
+.stDownloadButton > button:hover,
+.stDownloadButton > button:focus {
+  background: #ffffff !important;
+  color: var(--blue) !important;
+  border: 1px solid #bfdbfe !important;
+  border-radius: 8px !important;
+  min-height: 44px;
+  font-weight: 700 !important;
+  box-shadow: 0 1px 2px rgba(16,24,40,.04) !important;
+}
+.stDownloadButton > button:hover,
+.stDownloadButton > button:focus {
+  background: #eff6ff !important;
+  border-color: var(--blue) !important;
+}
 div[data-testid="stExpander"] details,
 div[data-testid="stExpander"] summary,
 div[data-testid="stExpander"] summary:hover {
@@ -673,6 +689,7 @@ with eval_tab:
 
         with st.expander("Raw result details"):
             st.json({"eval_results": eval_results, "faithfulness_results": faithfulness_results})
+
 
 
 
