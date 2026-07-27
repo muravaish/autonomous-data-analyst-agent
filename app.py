@@ -59,6 +59,63 @@ THEME_CSS = """
   padding: 10px 18px;
 }
 .stTabs [aria-selected="true"] { border-color: var(--blue); color: var(--blue); }
+/* Keep Streamlit controls in light theme, including hover/focus states. */
+.stTextInput input,
+.stTextInput input:hover,
+.stTextInput input:focus,
+[data-baseweb="input"] input,
+[data-baseweb="input"] input:hover,
+[data-baseweb="input"] input:focus {
+  background: #ffffff !important;
+  color: var(--ink) !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: none !important;
+}
+.stTextInput [data-baseweb="base-input"],
+.stTextInput [data-baseweb="base-input"]:hover,
+.stTextInput [data-baseweb="base-input"]:focus-within {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+}
+.stButton > button {
+  background: var(--blue) !important;
+  color: #ffffff !important;
+  border: 1px solid var(--blue) !important;
+  border-radius: 8px !important;
+  min-height: 46px;
+  font-weight: 700 !important;
+}
+.stButton > button:hover,
+.stButton > button:focus {
+  background: #1d4ed8 !important;
+  color: #ffffff !important;
+  border-color: #1d4ed8 !important;
+}
+div[data-testid="stExpander"] details,
+div[data-testid="stExpander"] summary,
+div[data-testid="stExpander"] summary:hover {
+  background: #ffffff !important;
+  color: var(--ink) !important;
+  border-color: var(--line) !important;
+}
+.sample-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 10px 0 12px 0;
+}
+.sample-card {
+  display: block;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid #dbe3ef;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #334155;
+  font-size: .86rem;
+  font-weight: 650;
+}
+.sample-card:hover { border-color: var(--blue); color: var(--blue); background: #eff6ff; }
 .hero {
   position: relative;
   min-height: 310px;
@@ -473,13 +530,16 @@ with chat_tab:
             """,
             unsafe_allow_html=True,
         )
-        selected = st.selectbox("Sample question", [""] + SAMPLE_QUESTIONS, label_visibility="collapsed")
+        if "draft_question" not in st.session_state:
+            st.session_state.draft_question = ""
+
         typed_question = st.text_input(
             "Question",
-            value=selected,
+            key="draft_question",
             placeholder="Example: Which sellers have the highest late delivery risk?",
             label_visibility="collapsed",
         )
+
         run_clicked = st.button("Run Analysis", type="primary", use_container_width=True)
 
         if "chat_runs" not in st.session_state:
@@ -531,11 +591,11 @@ with chat_tab:
             st.markdown(
                 """
                 <div class="quick-grid">
-                  <div class="quick-card"><strong>Ask</strong><span>Plain-English business questions.</span></div>
-                  <div class="quick-card"><strong>Verify</strong><span>Schema checks and gold-set evaluation.</span></div>
-                  <div class="quick-card"><strong>Act</strong><span>Rules convert findings into actions.</span></div>
+                  <div class="quick-card"><strong>Seller risk</strong><span>Which sellers have the highest late delivery risk?</span></div>
+                  <div class="quick-card"><strong>Revenue</strong><span>Which sellers generated the highest total revenue?</span></div>
+                  <div class="quick-card"><strong>Reviews</strong><span>What is the average review score by payment type?</span></div>
                 </div>
-                <div class="empty-state"><h3>Ready for analysis</h3><p>Choose a sample question or type your own.</p></div>
+                <div class="empty-state"><h3>Ready for analysis</h3><p>Type one business question above and run the analyst.</p></div>
                 """,
                 unsafe_allow_html=True,
             )
@@ -613,6 +673,9 @@ with eval_tab:
 
         with st.expander("Raw result details"):
             st.json({"eval_results": eval_results, "faithfulness_results": faithfulness_results})
+
+
+
 
 
 
