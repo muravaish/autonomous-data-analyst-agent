@@ -61,40 +61,94 @@ THEME_CSS = """
 .stTabs [aria-selected="true"] { border-color: var(--blue); color: var(--blue); }
 .hero {
   position: relative;
-  min-height: 360px;
+  min-height: 310px;
   color: white;
-  padding: 38px 42px;
+  padding: 34px 38px;
   border-radius: 8px;
-  margin-bottom: 18px;
+  margin-bottom: 14px;
   overflow: hidden;
   background-size: cover;
   background-position: center;
-  box-shadow: 0 24px 48px rgba(15,23,42,.24);
+  box-shadow: 0 24px 48px rgba(15,23,42,.22);
 }
 .hero::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(15,23,42,.88) 0%, rgba(15,23,42,.62) 42%, rgba(15,23,42,.10) 100%);
+  background: linear-gradient(90deg, rgba(12,18,32,.86) 0%, rgba(12,18,32,.54) 40%, rgba(12,18,32,.06) 100%);
 }
-.hero-content { position: relative; z-index: 1; max-width: 720px; }
-.hero-kicker { margin: 0 0 10px 0; color: #99f6e4; font-size: .82rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
-.hero h1 { margin: 0 0 12px 0; font-size: 2.35rem; line-height: 1.08; letter-spacing: 0; max-width: 680px; }
-.hero p { margin: 0; color: #e0f2fe; font-size: 1.02rem; max-width: 640px; }
-.hero-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+.hero-content { position: relative; z-index: 1; max-width: 600px; }
+.hero-kicker { margin: 0 0 10px 0; color: #99f6e4; font-size: .78rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.hero h1 { margin: 0 0 12px 0; font-size: 2.55rem; line-height: 1.02; letter-spacing: 0; max-width: 560px; }
+.hero p { margin: 0; color: #e0f2fe; font-size: 1rem; max-width: 500px; }
+.hero-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
 .hero-pill {
   display: inline-flex;
   align-items: center;
-  min-height: 32px;
-  padding: 6px 12px;
+  min-height: 30px;
+  padding: 5px 11px;
   border-radius: 999px;
-  background: rgba(255,255,255,.12);
+  background: rgba(255,255,255,.13);
   color: #ffffff;
-  border: 1px solid rgba(255,255,255,.24);
+  border: 1px solid rgba(255,255,255,.25);
   backdrop-filter: blur(10px);
-  font-size: .84rem;
+  font-size: .8rem;
   font-weight: 700;
 }
+.status-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 0 16px 0;
+}
+.status-chip {
+  display: inline-flex;
+  gap: 7px;
+  align-items: center;
+  min-height: 34px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-size: .84rem;
+  font-weight: 650;
+  box-shadow: 0 1px 2px rgba(16,24,40,.04);
+}
+.status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--teal); }
+.question-shell {
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 12px 28px rgba(16,24,40,.06);
+  margin-bottom: 14px;
+}
+.quick-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 10px 0 16px 0;
+}
+.quick-card {
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px;
+  min-height: 92px;
+  box-shadow: 0 1px 2px rgba(16,24,40,.04);
+}
+.quick-card strong { display: block; color: var(--ink); font-size: .95rem; margin-bottom: 5px; }
+.quick-card span { color: var(--muted); font-size: .84rem; }
+.empty-state {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  padding: 22px;
+  margin-top: 12px;
+}
+.empty-state h3 { margin: 0 0 6px 0; font-size: 1.15rem; color: var(--ink); }
+.empty-state p { margin: 0; color: var(--muted); }
 .panel {
   background: var(--panel);
   border: 1px solid var(--line);
@@ -379,13 +433,12 @@ st.markdown(
     f"""
     <div class="hero" style="background-image: url('{hero_uri}')">
       <div class="hero-content">
-        <p class="hero-kicker">AI Data Analyst + Decision Intelligence</p>
-        <h1>Ask business questions. Get validated SQL, grounded insights, and recommended actions.</h1>
-        <p>A production-minded analytics app for e-commerce data: schema-aware SQL generation, safety checks, interactive charts, faithfulness evaluation, and Azure-ready database support.</p>
+        <p class="hero-kicker">AI Commerce Analyst</p>
+        <h1>Answers you can verify.</h1>
+        <p>Ask a question. Get SQL, insight, chart, and action.</p>
         <div class="hero-actions">
-          <span class="hero-pill">LangGraph agents</span>
-          <span class="hero-pill">SQL validation</span>
-          <span class="hero-pill">Business rules</span>
+          <span class="hero-pill">Validated SQL</span>
+          <span class="hero-pill">Faithfulness checks</span>
           <span class="hero-pill">Azure-ready</span>
         </div>
       </div>
@@ -394,9 +447,17 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-status_cols = st.columns(2)
-status_cols[0].caption(f"Database backend: {get_database_backend()}")
-status_cols[1].caption(f"SQL dialect: {get_database_dialect()}")
+st.markdown(
+    f"""
+    <div class="status-strip">
+      <span class="status-chip"><span class="status-dot"></span>{get_database_backend()}</span>
+      <span class="status-chip"><span class="status-dot"></span>{get_database_dialect()}</span>
+      <span class="status-chip"><span class="status-dot"></span>10 gold checks</span>
+      <span class="status-chip"><span class="status-dot"></span>Docker + Azure</span>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
 chat_tab, eval_tab = st.tabs(["Chat Analyst", "Evaluation Dashboard"])
 
@@ -404,12 +465,19 @@ with chat_tab:
     left, right = st.columns([0.67, 0.33], gap="large")
 
     with left:
-        st.markdown('<div class="section-title">Business Question</div>', unsafe_allow_html=True)
+        st.markdown(
+            """
+            <div class="question-shell">
+              <div class="section-title" style="margin-top:0">Ask The Analyst</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
         selected = st.selectbox("Sample question", [""] + SAMPLE_QUESTIONS, label_visibility="collapsed")
         typed_question = st.text_input(
             "Question",
             value=selected,
-            placeholder="Ask about revenue, reviews, sellers, delivery, freight, or cancellations",
+            placeholder="Example: Which sellers have the highest late delivery risk?",
             label_visibility="collapsed",
         )
         run_clicked = st.button("Run Analysis", type="primary", use_container_width=True)
@@ -419,7 +487,7 @@ with chat_tab:
 
         if run_clicked and typed_question.strip():
             effective_question = resolve_follow_up(typed_question.strip(), st.session_state.chat_runs)
-            with st.spinner("Running analyst graph and applying business rules..."):
+            with st.spinner("Running analysis..."):
                 final_state = run_agent(effective_question)
             final_state["display_question"] = typed_question.strip()
             st.session_state.chat_runs.insert(0, final_state)
@@ -435,57 +503,64 @@ with chat_tab:
             top_metrics[2].metric("Priority", latest.get("priority") or "Low")
             top_metrics[3].metric("Chart", clean_label(latest.get("chart_type") or "None"))
 
-            st.markdown('<div class="section-title">Business Recommendation</div>', unsafe_allow_html=True)
-            render_recommendation(latest)
+            answer_tab, chart_tab, data_tab, sql_tab = st.tabs(["Answer", "Chart", "Data", "SQL"])
 
-            st.markdown('<div class="section-title">Insight</div>', unsafe_allow_html=True)
-            render_panel("Grounded narrative", latest.get("insight") or "No insight returned.")
+            with answer_tab:
+                render_recommendation(latest)
+                render_panel("Insight", latest.get("insight") or "No insight returned.")
+                st.download_button(
+                    "Download Report",
+                    data=build_report(latest),
+                    file_name="business_analysis_report.md",
+                    mime="text/markdown",
+                    use_container_width=True,
+                )
 
-            st.markdown('<div class="section-title">Why This Query Was Used</div>', unsafe_allow_html=True)
-            with st.container(border=True):
-                for item in latest.get("sql_explanation", []):
-                    st.write(f"- {item}")
+            with chart_tab:
+                render_chart_from_state(latest)
 
-            st.markdown('<div class="section-title">Generated SQL</div>', unsafe_allow_html=True)
-            st.code(latest.get("sql") or "", language="sql")
+            with data_tab:
+                st.dataframe(result_dataframe(latest), use_container_width=True, hide_index=True)
 
-            st.markdown('<div class="section-title">Result Table</div>', unsafe_allow_html=True)
-            st.dataframe(result_dataframe(latest), use_container_width=True, hide_index=True)
-
-            st.markdown('<div class="section-title">Chart</div>', unsafe_allow_html=True)
-            render_chart_from_state(latest)
-
-            st.download_button(
-                "Download Business Report",
-                data=build_report(latest),
-                file_name="business_analysis_report.md",
-                mime="text/markdown",
-                use_container_width=True,
-            )
+            with sql_tab:
+                st.code(latest.get("sql") or "", language="sql")
+                with st.expander("Why this query"):
+                    for item in latest.get("sql_explanation", []):
+                        st.write(f"- {item}")
         else:
-            render_panel("Ready", "Ask a business question to generate SQL, run the analysis, review the recommendation, and export the report.")
+            st.markdown(
+                """
+                <div class="quick-grid">
+                  <div class="quick-card"><strong>Ask</strong><span>Plain-English business questions.</span></div>
+                  <div class="quick-card"><strong>Verify</strong><span>Schema checks and gold-set evaluation.</span></div>
+                  <div class="quick-card"><strong>Act</strong><span>Rules convert findings into actions.</span></div>
+                </div>
+                <div class="empty-state"><h3>Ready for analysis</h3><p>Choose a sample question or type your own.</p></div>
+                """,
+                unsafe_allow_html=True,
+            )
 
     with right:
-        st.markdown('<div class="section-title">Confidence & Safety</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">System Status</div>', unsafe_allow_html=True)
         if st.session_state.get("chat_runs"):
             latest = st.session_state.chat_runs[0]
             safety = latest.get("safety_status") or {}
             with st.container(border=True):
-                st.metric("SQL Validation", safety.get("sql_validation", "Passed"))
-                st.metric("Rule Fired", clean_label(latest.get("recommendation_rule") or "None"))
+                st.metric("SQL", safety.get("sql_validation", "Passed"))
+                st.metric("Rule", clean_label(latest.get("recommendation_rule") or "None"))
                 st.metric("Plan", clean_label(latest.get("plan") or "Unknown"))
-                st.markdown("**KPIs detected**")
+                st.markdown("**KPIs**")
                 render_badges(latest.get("detected_kpis", []), "teal")
-                st.markdown("**Tables used**")
+                st.markdown("**Tables**")
                 render_badges(safety.get("tables_used", []))
 
-            with st.expander("Session Memory"):
+            with st.expander("History"):
                 for idx, run in enumerate(st.session_state.chat_runs[:5], start=1):
                     st.write(f"{idx}. {run.get('display_question') or run.get('question')}")
-            with st.expander("Full latest state"):
+            with st.expander("Debug state"):
                 st.json({k: v for k, v in latest.items() if k != "rows"})
         else:
-            render_panel("No run yet", "The safety panel will populate after the first analysis.")
+            render_panel("Standing by", "Run a question to see validation, KPIs, and tables.")
 
 with eval_tab:
     st.markdown('<div class="section-title">Evaluation Overview</div>', unsafe_allow_html=True)
@@ -538,6 +613,10 @@ with eval_tab:
 
         with st.expander("Raw result details"):
             st.json({"eval_results": eval_results, "faithfulness_results": faithfulness_results})
+
+
+
+
 
 
 
