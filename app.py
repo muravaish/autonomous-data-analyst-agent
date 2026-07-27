@@ -1,4 +1,5 @@
-﻿import json
+﻿import base64
+import json
 from pathlib import Path
 
 import pandas as pd
@@ -11,6 +12,7 @@ from db_adapter import get_database_backend, get_database_dialect
 BASE_DIR = Path(__file__).resolve().parent
 EVAL_RESULTS_PATH = BASE_DIR / "eval_results.json"
 FAITHFULNESS_RESULTS_PATH = BASE_DIR / "faithfulness_results.json"
+HERO_IMAGE_PATH = BASE_DIR / "assets" / "analytics-command-center.png"
 
 SAMPLE_QUESTIONS = [
     "What is the average review score for each payment type?",
@@ -58,15 +60,41 @@ THEME_CSS = """
 }
 .stTabs [aria-selected="true"] { border-color: var(--blue); color: var(--blue); }
 .hero {
-  background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 58%, #0f766e 100%);
+  position: relative;
+  min-height: 360px;
   color: white;
-  padding: 26px 30px;
+  padding: 38px 42px;
   border-radius: 8px;
   margin-bottom: 18px;
-  box-shadow: 0 18px 36px rgba(15,23,42,.18);
+  overflow: hidden;
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 24px 48px rgba(15,23,42,.24);
 }
-.hero h1 { margin: 0 0 8px 0; font-size: 2rem; line-height: 1.15; letter-spacing: 0; }
-.hero p { margin: 0; color: #dbeafe; font-size: 1rem; max-width: 950px; }
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(15,23,42,.88) 0%, rgba(15,23,42,.62) 42%, rgba(15,23,42,.10) 100%);
+}
+.hero-content { position: relative; z-index: 1; max-width: 720px; }
+.hero-kicker { margin: 0 0 10px 0; color: #99f6e4; font-size: .82rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.hero h1 { margin: 0 0 12px 0; font-size: 2.35rem; line-height: 1.08; letter-spacing: 0; max-width: 680px; }
+.hero p { margin: 0; color: #e0f2fe; font-size: 1.02rem; max-width: 640px; }
+.hero-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+.hero-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.12);
+  color: #ffffff;
+  border: 1px solid rgba(255,255,255,.24);
+  backdrop-filter: blur(10px);
+  font-size: .84rem;
+  font-weight: 700;
+}
 .panel {
   background: var(--panel);
   border: 1px solid var(--line);
@@ -109,6 +137,12 @@ hr.soft { border: none; border-top: 1px solid var(--line); margin: 14px 0; }
 </style>
 """
 
+
+def image_data_uri(path: Path) -> str:
+    if not path.exists():
+        return ""
+    encoded = base64.b64encode(path.read_bytes()).decode("utf-8")
+    return f"data:image/png;base64,{encoded}"
 
 def initial_state(question: str) -> dict:
     return {
@@ -340,11 +374,21 @@ def render_panel(title: str, body: str):
 
 st.set_page_config(page_title="Autonomous Data Analyst Agent", layout="wide")
 st.markdown(THEME_CSS, unsafe_allow_html=True)
+hero_uri = image_data_uri(HERO_IMAGE_PATH)
 st.markdown(
-    """
-    <div class="hero">
-      <h1>Autonomous Data Analyst Agent</h1>
-      <p>Agentic e-commerce analytics with validated SQL, grounded insights, deterministic recommendations, and evaluation-backed reliability.</p>
+    f"""
+    <div class="hero" style="background-image: url('{hero_uri}')">
+      <div class="hero-content">
+        <p class="hero-kicker">AI Data Analyst + Decision Intelligence</p>
+        <h1>Ask business questions. Get validated SQL, grounded insights, and recommended actions.</h1>
+        <p>A production-minded analytics app for e-commerce data: schema-aware SQL generation, safety checks, interactive charts, faithfulness evaluation, and Azure-ready database support.</p>
+        <div class="hero-actions">
+          <span class="hero-pill">LangGraph agents</span>
+          <span class="hero-pill">SQL validation</span>
+          <span class="hero-pill">Business rules</span>
+          <span class="hero-pill">Azure-ready</span>
+        </div>
+      </div>
     </div>
     """,
     unsafe_allow_html=True,
@@ -494,4 +538,6 @@ with eval_tab:
 
         with st.expander("Raw result details"):
             st.json({"eval_results": eval_results, "faithfulness_results": faithfulness_results})
+
+
 
