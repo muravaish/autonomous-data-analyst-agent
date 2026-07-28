@@ -271,6 +271,38 @@ div[data-testid="stExpander"] summary:hover {
   line-height: 1.35;
 }
 .history-item:first-of-type { border-top: none; }
+.sql-panel {
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px;
+  box-shadow: 0 1px 2px rgba(16,24,40,.04);
+}
+.sql-panel h3 { margin: 0 0 10px 0; font-size: 1rem; color: var(--ink); }
+.sql-code {
+  display: block;
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: #f8fafc;
+  color: #0f172a;
+  border: 1px solid #dbe3ef;
+  border-radius: 8px;
+  padding: 14px;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: .9rem;
+  line-height: 1.55;
+}
+.sql-explain {
+  margin-top: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px 14px;
+  color: var(--muted);
+}
+.sql-explain strong { color: var(--ink); }
+.sql-explain ul { margin: 8px 0 0 18px; padding: 0; }
+.sql-explain li { margin-bottom: 6px; }
 .panel {
   background: var(--panel);
   border: 1px solid var(--line);
@@ -728,10 +760,20 @@ with chat_tab:
                 st.dataframe(result_dataframe(latest), use_container_width=True, hide_index=True)
 
             with sql_tab:
-                st.code(latest.get("sql") or "", language="sql")
-                with st.expander("Why this query"):
-                    for item in latest.get("sql_explanation", []):
-                        st.write(f"- {item}")
+                sql_text = latest.get("sql") or "No SQL returned."
+                explanation_items = "".join(f"<li>{item}</li>" for item in latest.get("sql_explanation", []))
+                if not explanation_items:
+                    explanation_items = "<li>No explanation returned.</li>"
+                st.markdown(
+                    f"""
+                    <div class="sql-panel">
+                      <h3>Generated SQL</h3>
+                      <code class="sql-code">{sql_text}</code>
+                      <div class="sql-explain"><strong>Why this query</strong><ul>{explanation_items}</ul></div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
         else:
             st.markdown(
                 """
@@ -818,6 +860,7 @@ with eval_tab:
         st.markdown('<div class="section-title">Question-Level Results</div>', unsafe_allow_html=True)
         table = merged_eval_table(eval_results, faithfulness_results)
         st.dataframe(table, use_container_width=True, hide_index=True)
+
 
 
 
