@@ -74,6 +74,26 @@ def result_numeric_values(record: dict[str, Any]) -> list[float]:
     return flatten_numeric_values(rows or [])
 
 
+
+def flatten_text_values(value: Any) -> list[str]:
+    values: list[str] = []
+    if isinstance(value, str):
+        return [value]
+    if isinstance(value, dict):
+        for nested in value.values():
+            values.extend(flatten_text_values(nested))
+        return values
+    if isinstance(value, list):
+        for nested in value:
+            values.extend(flatten_text_values(nested))
+        return values
+    return values
+
+
+def result_text_values(record: dict[str, Any]) -> list[str]:
+    agent_result = record.get("agent_result") or {}
+    rows = agent_result.get("rows") if isinstance(agent_result, dict) else None
+    return flatten_text_values(rows or [])
 def question_context_values(record: dict[str, Any]) -> set[float]:
     """Numbers from the question are context, not claims made from the SQL result."""
     return {mention["value"] for mention in extract_text_numbers(record.get("question", ""))}
@@ -97,6 +117,7 @@ def mention_matches_value(mention: dict[str, Any], actual: float) -> bool:
 def evaluate_record(record: dict[str, Any]) -> dict[str, Any]:
     insight_mentions = extract_text_numbers(record.get("insight"))
     data_values = result_numeric_values(record)
+    data_text_values = result_text_values(record)
     context_values = question_context_values(record)
 
     checked = []
@@ -108,6 +129,10 @@ def evaluate_record(record: dict[str, Any]) -> dict[str, Any]:
         if any(mention_matches_value(mention, context) for context in context_values):
             status = "ignored_context_number"
             ignored_context_count += 1
+            matched_value = None
+        elif any(mention["raw"].replace(",", "") in text_value for text_value in data_text_values):
+            status = "grounded"
+            grounded_count += 1
             matched_value = None
         else:
             matched = [actual for actual in data_values if mention_matches_value(mention, actual)]
@@ -220,5 +245,8 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+
+
 
 

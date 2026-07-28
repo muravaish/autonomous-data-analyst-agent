@@ -608,7 +608,7 @@ st.markdown(
     <div class="status-strip">
       <span class="status-chip"><span class="status-dot"></span>{get_database_backend()}</span>
       <span class="status-chip"><span class="status-dot"></span>{get_database_dialect()}</span>
-      <span class="status-chip"><span class="status-dot"></span>10 gold checks</span>
+      <span class="status-chip"><span class="status-dot"></span>20 gold checks</span>
 
     </div>
     """,
@@ -800,5 +800,6 @@ with eval_tab:
 
         with st.expander("Raw result details"):
             st.json({"eval_results": eval_results, "faithfulness_results": faithfulness_results})
+
 
 

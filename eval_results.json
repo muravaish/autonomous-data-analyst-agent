@@ -6,7 +6,7 @@
     "match": true,
     "match_reason": "exact_match_top_row",
     "failure_category": null,
-    "agent_sql": "SELECT order_items.product_id, SUM(order_items.price + order_items.freight_value) AS total_revenue FROM order_items JOIN orders ON order_items.order_id = orders.order_id WHERE strftime('%Y', orders.order_purchase_timestamp) = '2017' GROUP BY order_items.product_id ORDER BY total_revenue DESC LIMIT 1;",
+    "agent_sql": "SELECT p.product_id AS product_id, SUM(oi.price + oi.freight_value) AS total_revenue\nFROM order_items oi\nJOIN orders o ON oi.order_id = o.order_id\nJOIN products p ON oi.product_id = p.product_id\nWHERE strftime('%Y', o.order_purchase_timestamp) = '2017'\nGROUP BY p.product_id\nORDER BY total_revenue DESC\nLIMIT 1;",
     "gold_sql": "SELECT product_id, SUM(price + freight_value) AS total_revenue, COUNT(*) AS times_ordered FROM order_items oi JOIN orders o ON oi.order_id = o.order_id WHERE strftime('%Y', o.order_purchase_timestamp) = '2017' GROUP BY product_id ORDER BY total_revenue DESC LIMIT 1;",
     "agent_result": {
       "columns": [
@@ -25,19 +25,15 @@
       "total_revenue": 50326.18,
       "times_ordered": 35
     },
-    "insight": "In 2017, the single product that generated the highest total revenue (combining price and freight) across all its orders was product ID `d6160fb7873f184099d9bc95e30376af`. This top-performing item achieved a total revenue of 50,326.18. No other individual product surpassed this total revenue figure in the 2017 dataset.",
+    "insight": "Based on the 2017 data, the single product that generated the highest total revenue (price plus freight) is product ID `d6160fb7873f184099d9bc95e30376af`. This product brought in a total revenue of $50,326.18 across all of its orders for the year.",
     "detected_kpis": [
       "seller_revenue",
       "freight_cost_percentage"
     ],
     "difficulty_label": "Complex",
     "sql_explanation": [
-      "Uses order_items, orders to answer the business question.",
-      "Joins related Olist tables so the metric is calculated at the right business grain.",
-      "Calculates an aggregate KPI such as revenue, count, average score, or rate.",
-      "Groups results by the requested business segment before comparing performance.",
-      "Sorts the result so the highest-priority records appear first.",
-      "Limits the output to the most relevant records for dashboard readability."
+      "Uses order_items, orders, products to answer the business question.",
+      "Calculates an aggregate KPI such as revenue, count, average score, or rate."
     ],
     "recommendations": [
       {
@@ -60,7 +56,8 @@
       "sql_validation": "Passed",
       "tables_used": [
         "order_items",
-        "orders"
+        "orders",
+        "products"
       ],
       "rows_returned": 1,
       "recommendation_rule": "concentration_risk_rule",
@@ -74,12 +71,12 @@
     "match": true,
     "match_reason": "exact_match_top_row",
     "failure_category": null,
-    "agent_sql": "SELECT payment_type, COUNT(*) AS number_of_transactions FROM order_payments GROUP BY payment_type ORDER BY number_of_transactions DESC LIMIT 1;",
+    "agent_sql": "SELECT payment_type, COUNT(*) AS transaction_count FROM order_payments GROUP BY payment_type ORDER BY transaction_count DESC LIMIT 1;",
     "gold_sql": "SELECT payment_type, COUNT(*) AS usage_count FROM order_payments GROUP BY payment_type ORDER BY usage_count DESC LIMIT 1;",
     "agent_result": {
       "columns": [
         "payment_type",
-        "number_of_transactions"
+        "transaction_count"
       ],
       "rows": [
         [
@@ -92,7 +89,7 @@
       "payment_type": "credit_card",
       "usage_count": 76795
     },
-    "insight": "Based on the provided data, credit cards were used for 76,795 transactions. However, the dataset does not fully answer the question because it only includes data for credit cards and lacks records for other payment methods. Without transaction counts for alternative payment types to compare against, it cannot be conclusively proven that credit cards are the most frequently used method.",
+    "insight": "Based on the provided data, credit card is the most frequently used payment method, accounting for all 76,795 recorded transactions. The dataset does not contain information on any other payment methods to allow for a comparative analysis.",
     "detected_kpis": [
       "customer_repeat_purchase_rate"
     ],
@@ -138,11 +135,11 @@
     "match": true,
     "match_reason": "exact_match_top_row",
     "failure_category": null,
-    "agent_sql": "SELECT COUNT(order_id) AS late_orders FROM orders WHERE order_delivered_customer_date > order_estimated_delivery_date;",
+    "agent_sql": "SELECT COUNT(order_id) AS late_orders_count FROM orders WHERE order_delivered_customer_date > order_estimated_delivery_date;",
     "gold_sql": "SELECT COUNT(*) AS late_orders FROM orders WHERE order_delivered_customer_date IS NOT NULL AND order_delivered_customer_date > order_estimated_delivery_date;",
     "agent_result": {
       "columns": [
-        "late_orders"
+        "late_orders_count"
       ],
       "rows": [
         [
@@ -153,7 +150,7 @@
     "gold_result": {
       "late_orders": 7827
     },
-    "insight": "Based on the provided data, a total of 7827 orders were delivered later than their estimated delivery date.",
+    "insight": "Based on the data provided, exactly 7,827 orders were delivered later than their estimated delivery date.",
     "detected_kpis": [
       "late_delivery_rate",
       "customer_repeat_purchase_rate"
@@ -197,7 +194,7 @@
     "match": true,
     "match_reason": "exact_match_top_row",
     "failure_category": null,
-    "agent_sql": "SELECT AVG(order_reviews.review_score) AS avg_review_score FROM order_reviews JOIN orders ON order_reviews.order_id = orders.order_id WHERE orders.order_delivered_customer_date > orders.order_estimated_delivery_date;",
+    "agent_sql": "SELECT AVG(r.review_score) AS avg_review_score\nFROM orders o\nJOIN order_reviews r ON o.order_id = r.order_id\nWHERE o.order_delivered_customer_date > o.order_estimated_delivery_date\n  AND o.order_status = 'delivered';",
     "gold_sql": "SELECT AVG(r.review_score) AS avg_score_when_late FROM order_reviews r JOIN orders o ON r.order_id = o.order_id WHERE o.order_delivered_customer_date > o.order_estimated_delivery_date;",
     "agent_result": {
       "columns": [
@@ -205,14 +202,14 @@
       ],
       "rows": [
         [
-          2.566549798727438
+          2.5664935064935066
         ]
       ]
     },
     "gold_result": {
       "avg_score_when_late": 2.56655
     },
-    "insight": "The average review score for orders that were delivered late is approximately 2.57. This metric directly represents customer evaluations specifically associated with delayed shipments. Please note that additional context, such as the total volume of late orders or comparative review scores for on-time deliveries, is not available in the provided data.",
+    "insight": "The average review score for orders that were delivered late is approximately 2.57. This indicates that late deliveries are generally associated with low customer satisfaction ratings.",
     "detected_kpis": [
       "late_delivery_rate",
       "average_review_score",
@@ -220,8 +217,7 @@
     ],
     "difficulty_label": "Complex",
     "sql_explanation": [
-      "Uses order_reviews, orders to answer the business question.",
-      "Joins related Olist tables so the metric is calculated at the right business grain.",
+      "Uses orders, order_reviews to answer the business question.",
       "Calculates an aggregate KPI such as revenue, count, average score, or rate."
     ],
     "recommendations": [
@@ -244,8 +240,8 @@
     "safety_status": {
       "sql_validation": "Passed",
       "tables_used": [
-        "order_reviews",
-        "orders"
+        "orders",
+        "order_reviews"
       ],
       "rows_returned": 1,
       "recommendation_rule": "customer_experience_rule",
@@ -256,28 +252,20 @@
     "id": "gold_005",
     "difficulty": "hard",
     "question": "Among orders that were delivered late, which product category has the highest average delivery delay in days?",
-    "match": true,
-    "match_reason": "exact_match_top_row",
-    "failure_category": null,
-    "agent_sql": "SELECT \n    COALESCE(T2.product_category_name_english, T1.product_category_name) AS product_category,\n    AVG(JULIANDAY(O.order_delivered_customer_date) - JULIANDAY(O.order_estimated_delivery_date)) AS avg_delivery_delay_days\nFROM orders AS O\nJOIN order_items AS OI ON O.order_id = OI.order_id\nJOIN products AS T1 ON OI.product_id = T1.product_id\nLEFT JOIN category_translation AS T2 ON T1.product_category_name = T2.product_category_name\nWHERE O.order_delivered_customer_date IS NOT NULL \n  AND O.order_estimated_delivery_date IS NOT NULL\n  AND JULIANDAY(O.order_delivered_customer_date) > JULIANDAY(O.order_estimated_delivery_date)\nGROUP BY product_category\nORDER BY avg_delivery_delay_days DESC\nLIMIT 1;",
+    "match": false,
+    "match_reason": "no_rows_returned",
+    "failure_category": "sql_execution_error",
+    "agent_sql": "SELECT \n    COALESCE(ct.product_category_name_english, p.product_category_name) AS product_category_name,\n    AVG(JULIANDAY(o.order_delivered_customer_date) - JULIANDAY(o.order_estimated_delivery_date)) AS avg_delivery_delay_days\nFROM orders o\nJOIN order_items oi ON o.order_id = oi.order_id\nJOIN products p ON oi.product_id = p.product_id\nLEFT JOIN category_translation ct ON p.product_category_name = ct.product_category_name\nWHERE o.order_delivered_customer_date IS NOT NULL \n  AND o.order_estimated_delivery_date IS NOT NULL\n  AND o.order_delivered_customer_date > o.order_estimated_delivery_date\nGROUP BY product_category_name\nORDER BY avg_delivery_delay_days DESC\nLIMIT 1;",
     "gold_sql": "SELECT ct.product_category_name_english AS category, AVG(julianday(o.order_delivered_customer_date) - julianday(o.order_estimated_delivery_date)) AS avg_delay_days FROM orders o JOIN order_items oi ON o.order_id = oi.order_id JOIN products p ON oi.product_id = p.product_id JOIN category_translation ct ON p.product_category_name = ct.product_category_name WHERE o.order_status = 'delivered' AND o.order_delivered_customer_date IS NOT NULL AND o.order_delivered_customer_date > o.order_estimated_delivery_date GROUP BY ct.product_category_name_english ORDER BY avg_delay_days DESC LIMIT 1;",
     "agent_result": {
-      "columns": [
-        "product_category",
-        "avg_delivery_delay_days"
-      ],
-      "rows": [
-        [
-          "home_appliances_2",
-          19.926121238415362
-        ]
-      ]
+      "columns": [],
+      "rows": []
     },
     "gold_result": {
       "category": "home_appliances_2",
       "avg_delay_days": 19.926121
     },
-    "insight": "Among orders that were delivered late, the **home_appliances_2** category experienced the highest average delivery delay. Late orders in this category were delayed by an average of approximately **19.93 days** (19.926 days). Operations should focus on investigating supply chain fulfillment for this specific category to prevent these extended delivery lags.",
+    "insight": "Could not generate insight due to an earlier error: SQL execution failed: ambiguous column name: product_category_name",
     "detected_kpis": [
       "late_delivery_rate",
       "customer_repeat_purchase_rate"
@@ -313,7 +301,7 @@
         "products",
         "category_translation"
       ],
-      "rows_returned": 1,
+      "rows_returned": 0,
       "recommendation_rule": "monitoring_rule",
       "insight_grounding": "Checked by faithfulness harness for saved eval runs"
     }
@@ -340,7 +328,7 @@
     "gold_result": {
       "unique_customers": 96096
     },
-    "insight": "There are a total of 96,960 unique customers in the dataset.",
+    "insight": "There are a total of 96,960 unique customers recorded in the dataset.",
     "detected_kpis": [
       "customer_repeat_purchase_rate"
     ],
@@ -383,15 +371,17 @@
     "match": true,
     "match_reason": "exact_match_top_row",
     "failure_category": null,
-    "agent_sql": "SELECT customer_state AS state FROM customers GROUP BY customer_state ORDER BY COUNT(customer_id) DESC LIMIT 1;",
+    "agent_sql": "SELECT customer_state, COUNT(customer_id) AS customer_count\nFROM customers\nGROUP BY customer_state\nORDER BY customer_count DESC\nLIMIT 1;",
     "gold_sql": "SELECT customer_state, COUNT(*) AS cnt FROM customers GROUP BY customer_state ORDER BY cnt DESC LIMIT 1;",
     "agent_result": {
       "columns": [
-        "state"
+        "customer_state",
+        "customer_count"
       ],
       "rows": [
         [
-          "SP"
+          "SP",
+          41746
         ]
       ]
     },
@@ -399,17 +389,14 @@
       "customer_state": "SP",
       "cnt": 41746
     },
-    "insight": "Based on the provided data, S\u00e3o Paulo (SP) is the Brazilian state with the most customers. The dataset does not include customer counts or percentages for any other states, so it is not possible to compare the exact volume relative to other regions.",
+    "insight": "Based on the provided data, S\u00e3o Paulo (SP) is the Brazilian state with the most customers, boasting a total of 41,746 customers. However, the data only provides information for this single state, so it does not allow for a comparative analysis against other Brazilian states.",
     "detected_kpis": [
       "customer_repeat_purchase_rate"
     ],
-    "difficulty_label": "Medium",
+    "difficulty_label": "Simple",
     "sql_explanation": [
       "Uses customers to answer the business question.",
-      "Calculates an aggregate KPI such as revenue, count, average score, or rate.",
-      "Groups results by the requested business segment before comparing performance.",
-      "Sorts the result so the highest-priority records appear first.",
-      "Limits the output to the most relevant records for dashboard readability."
+      "Calculates an aggregate KPI such as revenue, count, average score, or rate."
     ],
     "recommendations": [
       {
@@ -445,11 +432,11 @@
     "match": true,
     "match_reason": "exact_match_top_row",
     "failure_category": null,
-    "agent_sql": "SELECT AVG(freight_value / price) * 100 AS avg_freight_percentage FROM order_items WHERE price > 0;",
+    "agent_sql": "SELECT AVG(freight_value / price) * 100 AS average_freight_percentage FROM order_items WHERE price > 0;",
     "gold_sql": "SELECT AVG(freight_value / price) * 100 AS avg_freight_pct FROM order_items WHERE price > 0;",
     "agent_result": {
       "columns": [
-        "avg_freight_percentage"
+        "average_freight_percentage"
       ],
       "rows": [
         [
@@ -460,7 +447,7 @@
     "gold_result": {
       "avg_freight_pct": 32.086355
     },
-    "insight": "Based on the provided data, the average freight cost is 32.09% of the item price. The dataset only provides this single aggregated metric, so additional details regarding freight cost variations across different items or categories are not available.",
+    "insight": "Based on the provided data, the average freight cost is approximately 32.09% of the item price. However, the data does not provide additional context, such as the sample size, product categories, or time period, to further evaluate this percentage.",
     "detected_kpis": [
       "seller_revenue",
       "freight_cost_percentage"
@@ -475,7 +462,7 @@
         "rule_id": "shipping_cost_rule",
         "recommendation": "Shipping Cost Optimization",
         "priority": "Medium",
-        "metric": "avg_freight_percentage",
+        "metric": "average_freight_percentage",
         "value": 32.09,
         "entity": null,
         "reason": "Freight cost percentage is above the 30% margin pressure threshold.",
@@ -504,13 +491,13 @@
     "match": false,
     "match_reason": "no_matching_row_found",
     "failure_category": "misread_question_or_other",
-    "agent_sql": "SELECT \n    t1.seller_id, \n    SUM(t1.price) AS total_revenue, \n    COUNT(DISTINCT t1.order_id) AS distinct_orders\nFROM order_items AS t1\nGROUP BY t1.seller_id\nORDER BY total_revenue DESC\nLIMIT 1;",
+    "agent_sql": "SELECT \n    t1.seller_id,\n    SUM(t1.price) AS total_revenue,\n    COUNT(DISTINCT t1.order_id) AS distinct_orders_count\nFROM order_items AS t1\nGROUP BY t1.seller_id\nORDER BY total_revenue DESC\nLIMIT 1;",
     "gold_sql": "SELECT seller_id, SUM(price + freight_value) AS total_revenue, COUNT(DISTINCT order_id) AS distinct_orders FROM order_items GROUP BY seller_id ORDER BY total_revenue DESC LIMIT 1;",
     "agent_result": {
       "columns": [
         "seller_id",
         "total_revenue",
-        "distinct_orders"
+        "distinct_orders_count"
       ],
       "rows": [
         [
@@ -525,7 +512,7 @@
       "total_revenue": 249640.7,
       "distinct_orders": 1132
     },
-    "insight": "Seller ID '4869f7a5dfa277a7dca6462dcf3b52b2' generated the highest total revenue of 229,472.63. This revenue was achieved across a total of 1,132 distinct orders.",
+    "insight": "Seller ID '4869f7a5dfa277a7dca6462dcf3b52b2' generated the highest total revenue in the dataset, bringing in 229,472.63. This total revenue was accumulated across a total of 1,132 distinct orders.",
     "detected_kpis": [
       "seller_revenue"
     ],
@@ -565,25 +552,25 @@
     "id": "gold_010",
     "difficulty": "hard",
     "question": "Among 1-star reviews, what percentage of those orders were delivered late?",
-    "match": true,
-    "match_reason": "exact_match_top_row",
-    "failure_category": null,
-    "agent_sql": "SELECT \n    CAST(SUM(CASE WHEN o.order_delivered_customer_date > o.order_estimated_delivery_date THEN 1 ELSE 0 END) AS REAL) * 100 / COUNT(*) AS late_percentage\nFROM order_reviews r\nJOIN orders o ON r.order_id = o.order_id\nWHERE r.review_score = 1 \n  AND o.order_delivered_customer_date IS NOT NULL \n  AND o.order_estimated_delivery_date IS NOT NULL;",
+    "match": false,
+    "match_reason": "no_matching_row_found",
+    "failure_category": "misread_question_or_other",
+    "agent_sql": "SELECT \n    CAST(SUM(CASE WHEN o.order_delivered_customer_date > o.order_estimated_delivery_date THEN 1 ELSE 0 END) AS REAL) * 100 / COUNT(DISTINCT r.order_id) AS late_delivery_percentage\nFROM order_reviews r\nJOIN orders o ON r.order_id = o.order_id\nWHERE r.review_score = 1;",
     "gold_sql": "SELECT SUM(CASE WHEN o.order_delivered_customer_date > o.order_estimated_delivery_date THEN 1 ELSE 0 END) * 100.0 / COUNT(*) AS pct_late FROM order_reviews r JOIN orders o ON r.order_id = o.order_id WHERE r.review_score = 1 AND o.order_delivered_customer_date IS NOT NULL;",
     "agent_result": {
       "columns": [
-        "late_percentage"
+        "late_delivery_percentage"
       ],
       "rows": [
         [
-          37.772345626527795
+          31.1945931712455
         ]
       ]
     },
     "gold_result": {
       "pct_late": 37.772346
     },
-    "insight": "Among 1-star reviews, approximately 37.77% of those orders were delivered late. The provided data does not contain information regarding overall delivery performance or review breakdowns for other star ratings.",
+    "insight": "Among 1-star reviews, approximately 31.19% of those orders were delivered late. This indicates that roughly one-third of the lowest-rated orders experienced delivery delays.",
     "detected_kpis": [
       "late_delivery_rate",
       "average_review_score",
@@ -599,8 +586,8 @@
         "rule_id": "logistics_risk_rule",
         "recommendation": "Logistics Review",
         "priority": "High",
-        "metric": "late_percentage",
-        "value": 37.77,
+        "metric": "late_delivery_percentage",
+        "value": 31.19,
         "entity": null,
         "reason": "Late delivery rate is above the 15% operational risk threshold.",
         "action": "Review carrier performance, shipping promises, and seller fulfillment SLAs for the flagged segment."
@@ -619,6 +606,647 @@
       ],
       "rows_returned": 1,
       "recommendation_rule": "logistics_risk_rule",
+      "insight_grounding": "Checked by faithfulness harness for saved eval runs"
+    }
+  },
+  {
+    "id": "gold_011",
+    "difficulty": "easy",
+    "question": "Which order status appears most often, and how many orders have that status?",
+    "match": true,
+    "match_reason": "exact_match_top_row",
+    "failure_category": null,
+    "agent_sql": "SELECT order_status, COUNT(order_id) AS order_count\nFROM orders\nGROUP BY order_status\nORDER BY order_count DESC\nLIMIT 1;",
+    "gold_sql": "SELECT order_status, COUNT(*) AS order_count FROM orders GROUP BY order_status ORDER BY order_count DESC LIMIT 1;",
+    "agent_result": {
+      "columns": [
+        "order_status",
+        "order_count"
+      ],
+      "rows": [
+        [
+          "delivered",
+          96478
+        ]
+      ]
+    },
+    "gold_result": {
+      "order_status": "delivered",
+      "order_count": 96478
+    },
+    "insight": "Based on the provided data, the order status that appears most often is \"delivered\". There are a total of 96,478 orders with this status.",
+    "detected_kpis": [
+      "general_business_metric"
+    ],
+    "difficulty_label": "Simple",
+    "sql_explanation": [
+      "Uses orders to answer the business question.",
+      "Calculates an aggregate KPI such as revenue, count, average score, or rate."
+    ],
+    "recommendations": [
+      {
+        "rule_id": "monitoring_rule",
+        "recommendation": "Monitor KPI",
+        "priority": "Low",
+        "metric": "general_business_metric",
+        "value": null,
+        "entity": null,
+        "reason": "No configured risk threshold was crossed in the returned result.",
+        "action": "Use this result as a baseline and keep monitoring the KPI over time."
+      }
+    ],
+    "recommendation": "Monitor KPI",
+    "priority": "Low",
+    "recommendation_rule": "monitoring_rule",
+    "recommendation_reason": "No configured risk threshold was crossed in the returned result.",
+    "recommended_action": "Use this result as a baseline and keep monitoring the KPI over time.",
+    "safety_status": {
+      "sql_validation": "Passed",
+      "tables_used": [
+        "orders"
+      ],
+      "rows_returned": 1,
+      "recommendation_rule": "monitoring_rule",
+      "insight_grounding": "Checked by faithfulness harness for saved eval runs"
+    }
+  },
+  {
+    "id": "gold_012",
+    "difficulty": "medium",
+    "question": "Which month had the highest number of orders?",
+    "match": true,
+    "match_reason": "exact_match_top_row",
+    "failure_category": null,
+    "agent_sql": "SELECT strftime('%Y-%m', order_purchase_timestamp) AS month, COUNT(order_id) AS total_orders FROM orders GROUP BY month ORDER BY total_orders DESC LIMIT 1;",
+    "gold_sql": "SELECT strftime('%Y-%m', order_purchase_timestamp) AS order_month, COUNT(*) AS order_count FROM orders GROUP BY order_month ORDER BY order_count DESC LIMIT 1;",
+    "agent_result": {
+      "columns": [
+        "month",
+        "total_orders"
+      ],
+      "rows": [
+        [
+          "2017-11",
+          7544
+        ]
+      ]
+    },
+    "gold_result": {
+      "order_month": "2017-11",
+      "order_count": 7544
+    },
+    "insight": "Based on the provided data, November 2017 (`2017-11`) had the highest number of orders, reaching a total of 7,544. Because the query output contains only this single row, it reflects the top-performing month available in the dataset.",
+    "detected_kpis": [
+      "monthly_revenue_trend"
+    ],
+    "difficulty_label": "Complex",
+    "sql_explanation": [
+      "Uses orders to answer the business question.",
+      "Calculates an aggregate KPI such as revenue, count, average score, or rate.",
+      "Groups results by the requested business segment before comparing performance.",
+      "Sorts the result so the highest-priority records appear first.",
+      "Limits the output to the most relevant records for dashboard readability."
+    ],
+    "recommendations": [
+      {
+        "rule_id": "concentration_risk_rule",
+        "recommendation": "Revenue Concentration Review",
+        "priority": "Medium",
+        "metric": "total_orders",
+        "value": 7544.0,
+        "entity": null,
+        "reason": "A single seller/category appears to dominate the returned revenue view.",
+        "action": "Monitor dependency risk and consider diversifying demand across alternative sellers or categories."
+      }
+    ],
+    "recommendation": "Revenue Concentration Review",
+    "priority": "Medium",
+    "recommendation_rule": "concentration_risk_rule",
+    "recommendation_reason": "A single seller/category appears to dominate the returned revenue view.",
+    "recommended_action": "Monitor dependency risk and consider diversifying demand across alternative sellers or categories.",
+    "safety_status": {
+      "sql_validation": "Passed",
+      "tables_used": [
+        "orders"
+      ],
+      "rows_returned": 1,
+      "recommendation_rule": "concentration_risk_rule",
+      "insight_grounding": "Checked by faithfulness harness for saved eval runs"
+    }
+  },
+  {
+    "id": "gold_013",
+    "difficulty": "medium",
+    "question": "Which English product category has the highest number of order items?",
+    "match": true,
+    "match_reason": "exact_match_top_row",
+    "failure_category": null,
+    "agent_sql": "SELECT t3.product_category_name_english, COUNT(t1.order_item_id) AS total_order_items FROM order_items AS t1 JOIN products AS t2 ON t1.product_id = t2.product_id JOIN category_translation AS t3 ON t2.product_category_name = t3.product_category_name GROUP BY t3.product_category_name_english ORDER BY total_order_items DESC LIMIT 1;",
+    "gold_sql": "SELECT ct.product_category_name_english AS category, COUNT(*) AS item_count FROM order_items oi JOIN products p ON oi.product_id = p.product_id JOIN category_translation ct ON p.product_category_name = ct.product_category_name GROUP BY ct.product_category_name_english ORDER BY item_count DESC LIMIT 1;",
+    "agent_result": {
+      "columns": [
+        "product_category_name_english",
+        "total_order_items"
+      ],
+      "rows": [
+        [
+          "bed_bath_table",
+          11115
+        ]
+      ]
+    },
+    "gold_result": {
+      "category": "bed_bath_table",
+      "item_count": 11115
+    },
+    "insight": "Based on the provided dataset, the English product category with the highest number of order items is \"bed_bath_table.\" This category recorded a total of 11,115 order items. Because only this single top record is provided, comparisons against other product categories cannot be evaluated from this data alone.",
+    "detected_kpis": [
+      "general_business_metric"
+    ],
+    "difficulty_label": "Complex",
+    "sql_explanation": [
+      "Uses order_items, products, category_translation to answer the business question.",
+      "Joins related Olist tables so the metric is calculated at the right business grain.",
+      "Calculates an aggregate KPI such as revenue, count, average score, or rate.",
+      "Groups results by the requested business segment before comparing performance.",
+      "Sorts the result so the highest-priority records appear first.",
+      "Limits the output to the most relevant records for dashboard readability."
+    ],
+    "recommendations": [
+      {
+        "rule_id": "monitoring_rule",
+        "recommendation": "Monitor KPI",
+        "priority": "Low",
+        "metric": "general_business_metric",
+        "value": null,
+        "entity": null,
+        "reason": "No configured risk threshold was crossed in the returned result.",
+        "action": "Use this result as a baseline and keep monitoring the KPI over time."
+      }
+    ],
+    "recommendation": "Monitor KPI",
+    "priority": "Low",
+    "recommendation_rule": "monitoring_rule",
+    "recommendation_reason": "No configured risk threshold was crossed in the returned result.",
+    "recommended_action": "Use this result as a baseline and keep monitoring the KPI over time.",
+    "safety_status": {
+      "sql_validation": "Passed",
+      "tables_used": [
+        "order_items",
+        "products",
+        "category_translation"
+      ],
+      "rows_returned": 1,
+      "recommendation_rule": "monitoring_rule",
+      "insight_grounding": "Checked by faithfulness harness for saved eval runs"
+    }
+  },
+  {
+    "id": "gold_014",
+    "difficulty": "easy",
+    "question": "Which payment type has the highest average number of installments?",
+    "match": true,
+    "match_reason": "exact_match_top_row",
+    "failure_category": null,
+    "agent_sql": "SELECT payment_type, AVG(payment_installments) AS avg_installments FROM order_payments GROUP BY payment_type ORDER BY avg_installments DESC LIMIT 1;",
+    "gold_sql": "SELECT payment_type, AVG(payment_installments) AS avg_installments FROM order_payments GROUP BY payment_type ORDER BY avg_installments DESC LIMIT 1;",
+    "agent_result": {
+      "columns": [
+        "payment_type",
+        "avg_installments"
+      ],
+      "rows": [
+        [
+          "credit_card",
+          3.507155413763917
+        ]
+      ]
+    },
+    "gold_result": {
+      "payment_type": "credit_card",
+      "avg_installments": 3.507155
+    },
+    "insight": "Based on the provided dataset, credit card transactions have an average of approximately 3.51 installments. However, the data provided only includes the credit card payment type and lacks information for alternative payment methods. Consequently, the data does not fully answer the question, as a comparison across multiple payment types is required to determine which one is the highest.",
+    "detected_kpis": [
+      "general_business_metric"
+    ],
+    "difficulty_label": "Medium",
+    "sql_explanation": [
+      "Uses order_payments to answer the business question.",
+      "Calculates an aggregate KPI such as revenue, count, average score, or rate.",
+      "Groups results by the requested business segment before comparing performance.",
+      "Sorts the result so the highest-priority records appear first.",
+      "Limits the output to the most relevant records for dashboard readability."
+    ],
+    "recommendations": [
+      {
+        "rule_id": "monitoring_rule",
+        "recommendation": "Monitor KPI",
+        "priority": "Low",
+        "metric": "general_business_metric",
+        "value": null,
+        "entity": null,
+        "reason": "No configured risk threshold was crossed in the returned result.",
+        "action": "Use this result as a baseline and keep monitoring the KPI over time."
+      }
+    ],
+    "recommendation": "Monitor KPI",
+    "priority": "Low",
+    "recommendation_rule": "monitoring_rule",
+    "recommendation_reason": "No configured risk threshold was crossed in the returned result.",
+    "recommended_action": "Use this result as a baseline and keep monitoring the KPI over time.",
+    "safety_status": {
+      "sql_validation": "Passed",
+      "tables_used": [
+        "order_payments"
+      ],
+      "rows_returned": 1,
+      "recommendation_rule": "monitoring_rule",
+      "insight_grounding": "Checked by faithfulness harness for saved eval runs"
+    }
+  },
+  {
+    "id": "gold_015",
+    "difficulty": "hard",
+    "question": "Which customer state has the highest average review score?",
+    "match": true,
+    "match_reason": "exact_match_top_row",
+    "failure_category": null,
+    "agent_sql": "SELECT\n  t1.customer_state,\n  AVG(t3.review_score) AS avg_review_score\nFROM customers AS t1\nJOIN orders AS t2\n  ON t1.customer_id = t2.customer_id\nJOIN order_reviews AS t3\n  ON t2.order_id = t3.order_id\nGROUP BY\n  t1.customer_state\nORDER BY\n  avg_review_score DESC\nLIMIT 1;",
+    "gold_sql": "SELECT customer_state, AVG(r.review_score) AS avg_review_score FROM customers c JOIN orders o ON c.customer_id = o.customer_id JOIN order_reviews r ON o.order_id = r.order_id GROUP BY customer_state ORDER BY avg_review_score DESC LIMIT 1;",
+    "agent_result": {
+      "columns": [
+        "customer_state",
+        "avg_review_score"
+      ],
+      "rows": [
+        [
+          "AP",
+          4.1940298507462686
+        ]
+      ]
+    },
+    "gold_result": {
+      "customer_state": "AP",
+      "avg_review_score": 4.19403
+    },
+    "insight": "Based on the provided data, the customer state of AP recorded an average review score of approximately 4.19 (4.1940298507462686). However, because the dataset only includes results for this single state, the provided data does not fully answer the question. Comparative data for other customer states is required to definitively confirm which state has the highest average review score.",
+    "detected_kpis": [
+      "average_review_score",
+      "customer_repeat_purchase_rate"
+    ],
+    "difficulty_label": "Complex",
+    "sql_explanation": [
+      "Uses customers, orders, order_reviews to answer the business question.",
+      "Calculates an aggregate KPI such as revenue, count, average score, or rate."
+    ],
+    "recommendations": [
+      {
+        "rule_id": "monitoring_rule",
+        "recommendation": "Monitor KPI",
+        "priority": "Low",
+        "metric": "average_review_score",
+        "value": null,
+        "entity": null,
+        "reason": "No configured risk threshold was crossed in the returned result.",
+        "action": "Use this result as a baseline and keep monitoring the KPI over time."
+      }
+    ],
+    "recommendation": "Monitor KPI",
+    "priority": "Low",
+    "recommendation_rule": "monitoring_rule",
+    "recommendation_reason": "No configured risk threshold was crossed in the returned result.",
+    "recommended_action": "Use this result as a baseline and keep monitoring the KPI over time.",
+    "safety_status": {
+      "sql_validation": "Passed",
+      "tables_used": [
+        "customers",
+        "orders",
+        "order_reviews"
+      ],
+      "rows_returned": 1,
+      "recommendation_rule": "monitoring_rule",
+      "insight_grounding": "Checked by faithfulness harness for saved eval runs"
+    }
+  },
+  {
+    "id": "gold_016",
+    "difficulty": "easy",
+    "question": "Which seller state has the most sellers?",
+    "match": true,
+    "match_reason": "exact_match_top_row",
+    "failure_category": null,
+    "agent_sql": "SELECT seller_state AS state, COUNT(seller_id) AS seller_count FROM sellers GROUP BY seller_state ORDER BY seller_count DESC LIMIT 1;",
+    "gold_sql": "SELECT seller_state, COUNT(DISTINCT seller_id) AS seller_count FROM sellers GROUP BY seller_state ORDER BY seller_count DESC LIMIT 1;",
+    "agent_result": {
+      "columns": [
+        "state",
+        "seller_count"
+      ],
+      "rows": [
+        [
+          "SP",
+          1849
+        ]
+      ]
+    },
+    "gold_result": {
+      "seller_state": "SP",
+      "seller_count": 1849
+    },
+    "insight": "Based on the provided data, SP is the seller state with the most sellers, recording a total count of 1,849. However, because the dataset only includes a single row, it does not show the seller counts for other states to allow for a direct comparison. Nevertheless, SP is explicitly identified as the leading state with 1,849 sellers in the query results.",
+    "detected_kpis": [
+      "seller_revenue"
+    ],
+    "difficulty_label": "Medium",
+    "sql_explanation": [
+      "Uses sellers to answer the business question.",
+      "Calculates an aggregate KPI such as revenue, count, average score, or rate.",
+      "Groups results by the requested business segment before comparing performance.",
+      "Sorts the result so the highest-priority records appear first.",
+      "Limits the output to the most relevant records for dashboard readability."
+    ],
+    "recommendations": [
+      {
+        "rule_id": "concentration_risk_rule",
+        "recommendation": "Revenue Concentration Review",
+        "priority": "Medium",
+        "metric": "seller_count",
+        "value": 1849.0,
+        "entity": null,
+        "reason": "A single seller/category appears to dominate the returned revenue view.",
+        "action": "Monitor dependency risk and consider diversifying demand across alternative sellers or categories."
+      }
+    ],
+    "recommendation": "Revenue Concentration Review",
+    "priority": "Medium",
+    "recommendation_rule": "concentration_risk_rule",
+    "recommendation_reason": "A single seller/category appears to dominate the returned revenue view.",
+    "recommended_action": "Monitor dependency risk and consider diversifying demand across alternative sellers or categories.",
+    "safety_status": {
+      "sql_validation": "Passed",
+      "tables_used": [
+        "sellers"
+      ],
+      "rows_returned": 1,
+      "recommendation_rule": "concentration_risk_rule",
+      "insight_grounding": "Checked by faithfulness harness for saved eval runs"
+    }
+  },
+  {
+    "id": "gold_017",
+    "difficulty": "easy",
+    "question": "How many orders were canceled?",
+    "match": true,
+    "match_reason": "exact_match_top_row",
+    "failure_category": null,
+    "agent_sql": "SELECT COUNT(*) AS canceled_orders FROM orders WHERE order_status = 'canceled';",
+    "gold_sql": "SELECT COUNT(*) AS canceled_orders FROM orders WHERE order_status = 'canceled';",
+    "agent_result": {
+      "columns": [
+        "canceled_orders"
+      ],
+      "rows": [
+        [
+          625
+        ]
+      ]
+    },
+    "gold_result": {
+      "canceled_orders": 625
+    },
+    "insight": "A total of 625 orders were canceled according to the provided data. Because the dataset only includes this single aggregate count, additional context\u2014such as the overall order volume, time frame, or reasons for cancellation\u2014is unavailable. Further data would be required to calculate the cancellation rate and assess the broader operational impact.",
+    "detected_kpis": [
+      "order_cancellation_rate"
+    ],
+    "difficulty_label": "Simple",
+    "sql_explanation": [
+      "Uses orders to answer the business question.",
+      "Calculates an aggregate KPI such as revenue, count, average score, or rate."
+    ],
+    "recommendations": [
+      {
+        "rule_id": "monitoring_rule",
+        "recommendation": "Monitor KPI",
+        "priority": "Low",
+        "metric": "order_cancellation_rate",
+        "value": null,
+        "entity": null,
+        "reason": "No configured risk threshold was crossed in the returned result.",
+        "action": "Use this result as a baseline and keep monitoring the KPI over time."
+      }
+    ],
+    "recommendation": "Monitor KPI",
+    "priority": "Low",
+    "recommendation_rule": "monitoring_rule",
+    "recommendation_reason": "No configured risk threshold was crossed in the returned result.",
+    "recommended_action": "Use this result as a baseline and keep monitoring the KPI over time.",
+    "safety_status": {
+      "sql_validation": "Passed",
+      "tables_used": [
+        "orders"
+      ],
+      "rows_returned": 1,
+      "recommendation_rule": "monitoring_rule",
+      "insight_grounding": "Checked by faithfulness harness for saved eval runs"
+    }
+  },
+  {
+    "id": "gold_018",
+    "difficulty": "hard",
+    "question": "Which month had the highest delivered-order revenue including freight?",
+    "match": true,
+    "match_reason": "exact_match_top_row",
+    "failure_category": null,
+    "agent_sql": "SELECT strftime('%Y-%m', t1.order_purchase_timestamp) AS month, SUM(t2.price + t2.freight_value) AS total_revenue FROM orders AS t1 JOIN order_items AS t2 ON t1.order_id = t2.order_id WHERE t1.order_status = 'delivered' GROUP BY month ORDER BY total_revenue DESC LIMIT 1;",
+    "gold_sql": "SELECT strftime('%Y-%m', o.order_purchase_timestamp) AS month, SUM(oi.price + oi.freight_value) AS total_revenue FROM orders o JOIN order_items oi ON o.order_id = oi.order_id WHERE o.order_status = 'delivered' GROUP BY month ORDER BY total_revenue DESC LIMIT 1;",
+    "agent_result": {
+      "columns": [
+        "month",
+        "total_revenue"
+      ],
+      "rows": [
+        [
+          "2017-11",
+          1153364.2
+        ]
+      ]
+    },
+    "gold_result": {
+      "month": "2017-11",
+      "total_revenue": 1153364.2
+    },
+    "insight": "Based on the provided data, November 2017 (2017-11) generated the highest delivered-order revenue including freight. During this top-performing month, total revenue reached 1,153,364.2. While specific numbers for other months are not provided in this dataset for direct comparison, November 2017 represents the peak result recorded.",
+    "detected_kpis": [
+      "late_delivery_rate",
+      "seller_revenue",
+      "freight_cost_percentage",
+      "monthly_revenue_trend"
+    ],
+    "difficulty_label": "Complex",
+    "sql_explanation": [
+      "Uses orders, order_items to answer the business question.",
+      "Joins related Olist tables so the metric is calculated at the right business grain.",
+      "Calculates an aggregate KPI such as revenue, count, average score, or rate.",
+      "Groups results by the requested business segment before comparing performance.",
+      "Sorts the result so the highest-priority records appear first.",
+      "Limits the output to the most relevant records for dashboard readability."
+    ],
+    "recommendations": [
+      {
+        "rule_id": "concentration_risk_rule",
+        "recommendation": "Revenue Concentration Review",
+        "priority": "Medium",
+        "metric": "total_revenue",
+        "value": 1153364.2,
+        "entity": null,
+        "reason": "A single seller/category appears to dominate the returned revenue view.",
+        "action": "Monitor dependency risk and consider diversifying demand across alternative sellers or categories."
+      }
+    ],
+    "recommendation": "Revenue Concentration Review",
+    "priority": "Medium",
+    "recommendation_rule": "concentration_risk_rule",
+    "recommendation_reason": "A single seller/category appears to dominate the returned revenue view.",
+    "recommended_action": "Monitor dependency risk and consider diversifying demand across alternative sellers or categories.",
+    "safety_status": {
+      "sql_validation": "Passed",
+      "tables_used": [
+        "orders",
+        "order_items"
+      ],
+      "rows_returned": 1,
+      "recommendation_rule": "concentration_risk_rule",
+      "insight_grounding": "Checked by faithfulness harness for saved eval runs"
+    }
+  },
+  {
+    "id": "gold_019",
+    "difficulty": "hard",
+    "question": "Among product categories with at least 100 reviews, which category has the lowest average review score?",
+    "match": true,
+    "match_reason": "exact_match_top_row",
+    "failure_category": null,
+    "agent_sql": "SELECT COALESCE(t2.product_category_name_english, t1.product_category_name) AS product_category, AVG(t4.review_score) AS avg_review_score FROM products AS t1 JOIN category_translation AS t2 ON t1.product_category_name = t2.product_category_name JOIN order_items AS t3 ON t1.product_id = t3.product_id JOIN order_reviews AS t4 ON t3.order_id = t4.order_id GROUP BY product_category HAVING COUNT(t4.review_id) >= 100 ORDER BY avg_review_score ASC LIMIT 1;",
+    "gold_sql": "SELECT ct.product_category_name_english AS category, AVG(r.review_score) AS avg_review_score, COUNT(*) AS review_count FROM order_reviews r JOIN order_items oi ON r.order_id = oi.order_id JOIN products p ON oi.product_id = p.product_id JOIN category_translation ct ON p.product_category_name = ct.product_category_name GROUP BY ct.product_category_name_english HAVING review_count >= 100 ORDER BY avg_review_score ASC LIMIT 1;",
+    "agent_result": {
+      "columns": [
+        "product_category",
+        "avg_review_score"
+      ],
+      "rows": [
+        [
+          "office_furniture",
+          3.4931831653823355
+        ]
+      ]
+    },
+    "gold_result": {
+      "category": "office_furniture",
+      "avg_review_score": 3.493183,
+      "review_count": 1687
+    },
+    "insight": "Based on the data provided, among product categories with at least 100 reviews, office_furniture has the lowest average review score at approximately 3.49. The provided dataset does not contain information on any other product categories to compare against.",
+    "detected_kpis": [
+      "average_review_score"
+    ],
+    "difficulty_label": "Complex",
+    "sql_explanation": [
+      "Uses products, category_translation, order_items, order_reviews to answer the business question.",
+      "Joins related Olist tables so the metric is calculated at the right business grain.",
+      "Calculates an aggregate KPI such as revenue, count, average score, or rate.",
+      "Groups results by the requested business segment before comparing performance.",
+      "Sorts the result so the highest-priority records appear first.",
+      "Limits the output to the most relevant records for dashboard readability."
+    ],
+    "recommendations": [
+      {
+        "rule_id": "customer_experience_rule",
+        "recommendation": "Customer Experience Review",
+        "priority": "High",
+        "metric": "avg_review_score",
+        "value": 3.49,
+        "entity": null,
+        "reason": "Average review score is below the 3.5 customer satisfaction threshold.",
+        "action": "Inspect review themes, delivery issues, product quality, and seller communication for this segment."
+      }
+    ],
+    "recommendation": "Customer Experience Review",
+    "priority": "High",
+    "recommendation_rule": "customer_experience_rule",
+    "recommendation_reason": "Average review score is below the 3.5 customer satisfaction threshold.",
+    "recommended_action": "Inspect review themes, delivery issues, product quality, and seller communication for this segment.",
+    "safety_status": {
+      "sql_validation": "Passed",
+      "tables_used": [
+        "products",
+        "category_translation",
+        "order_items",
+        "order_reviews"
+      ],
+      "rows_returned": 1,
+      "recommendation_rule": "customer_experience_rule",
+      "insight_grounding": "Checked by faithfulness harness for saved eval runs"
+    }
+  },
+  {
+    "id": "gold_020",
+    "difficulty": "medium",
+    "question": "How many customers made more than one purchase?",
+    "match": true,
+    "match_reason": "exact_match_top_row",
+    "failure_category": null,
+    "agent_sql": "SELECT COUNT(*) AS total_customers_with_multiple_purchases FROM (SELECT customer_unique_id FROM customers JOIN orders ON customers.customer_id = orders.customer_id GROUP BY customer_unique_id HAVING COUNT(orders.order_id) > 1);",
+    "gold_sql": "SELECT COUNT(*) AS repeat_customers FROM (SELECT customer_unique_id FROM customers GROUP BY customer_unique_id HAVING COUNT(*) > 1);",
+    "agent_result": {
+      "columns": [
+        "total_customers_with_multiple_purchases"
+      ],
+      "rows": [
+        [
+          2997
+        ]
+      ]
+    },
+    "gold_result": {
+      "repeat_customers": 2997
+    },
+    "insight": "A total of 2,997 customers made more than one purchase. The provided data does not contain the total number of customers overall, so it is not possible to determine what percentage of the customer base this represents.",
+    "detected_kpis": [
+      "customer_repeat_purchase_rate"
+    ],
+    "difficulty_label": "Medium",
+    "sql_explanation": [
+      "Uses customers, orders to answer the business question.",
+      "Joins related Olist tables so the metric is calculated at the right business grain.",
+      "Calculates an aggregate KPI such as revenue, count, average score, or rate.",
+      "Groups results by the requested business segment before comparing performance."
+    ],
+    "recommendations": [
+      {
+        "rule_id": "monitoring_rule",
+        "recommendation": "Monitor KPI",
+        "priority": "Low",
+        "metric": "customer_repeat_purchase_rate",
+        "value": null,
+        "entity": null,
+        "reason": "No configured risk threshold was crossed in the returned result.",
+        "action": "Use this result as a baseline and keep monitoring the KPI over time."
+      }
+    ],
+    "recommendation": "Monitor KPI",
+    "priority": "Low",
+    "recommendation_rule": "monitoring_rule",
+    "recommendation_reason": "No configured risk threshold was crossed in the returned result.",
+    "recommended_action": "Use this result as a baseline and keep monitoring the KPI over time.",
+    "safety_status": {
+      "sql_validation": "Passed",
+      "tables_used": [
+        "customers",
+        "orders"
+      ],
+      "rows_returned": 1,
+      "recommendation_rule": "monitoring_rule",
       "insight_grounding": "Checked by faithfulness harness for saved eval runs"
     }
   }

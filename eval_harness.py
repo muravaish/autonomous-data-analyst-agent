@@ -11,6 +11,17 @@ def load_gold_set():
         return json.load(f)
 
 
+
+def load_existing_results():
+    try:
+        with open(RESULTS_PATH, "r") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return []
+
+def save_results(results):
+    with open(RESULTS_PATH, "w") as f:
+        json.dump(results, f, indent=2)
 def normalize_value(v):
     """Make a value comparable regardless of type quirks (float rounding,
     string case/whitespace, etc.)."""
@@ -111,9 +122,13 @@ def run_evaluation():
     gold_set = load_gold_set()
     app = build_graph()
 
-    results = []
+    results = load_existing_results()
+    completed_ids = {row.get("id") for row in results}
 
     for item in gold_set:
+        if item["id"] in completed_ids:
+            print(f"Skipping {item['id']} -- already saved in {RESULTS_PATH}")
+            continue
         print(f"\n{'='*60}")
         print(f"Evaluating {item['id']} [{item['difficulty']}]: {item['question']}")
         print("=" * 60)
@@ -216,6 +231,8 @@ def run_evaluation():
             "safety_status": final_state.get("safety_status", {}),
         })
 
+        save_results(results)
+
         # Small pause to be gentle on the free-tier API between questions
         time.sleep(2)
 
@@ -256,3 +273,10 @@ def run_evaluation():
 
 if __name__ == "__main__":
     run_evaluation()
+
+
+
+
+
+
+

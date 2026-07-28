@@ -109,17 +109,32 @@ Current saved evaluation results:
 
 | Evaluation Type | Result |
 |---|---:|
-| Execution accuracy | 8/10 |
-| Insight faithfulness | 10/10 |
-| Numeric grounding | 11/11 |
+| Execution accuracy | 17/20 (85.0%) |
+| Insight faithfulness | 20/20 (100.0%) |
+| Numeric grounding | 29/29 (100.0%) |
+
+Execution accuracy by difficulty:
+
+| Difficulty | Result |
+|---|---:|
+| Easy | 8/8 (100.0%) |
+| Medium | 6/6 (100.0%) |
+| Hard | 3/6 (50.0%) |
+
+Current failure breakdown:
+
+| Failure Type | Count |
+|---|---:|
+| `misread_question_or_other` | 2 |
+| `sql_execution_error` | 1 |
 
 Recommendation-rule breakdown from the saved evaluation set:
 
 | Rule | Count |
 |---|---:|
-| `monitoring_rule` | 5 |
-| `concentration_risk_rule` | 2 |
-| `customer_experience_rule` | 1 |
+| `monitoring_rule` | 11 |
+| `concentration_risk_rule` | 5 |
+| `customer_experience_rule` | 2 |
 | `logistics_risk_rule` | 1 |
 | `shipping_cost_rule` | 1 |
 
@@ -290,6 +305,7 @@ Remaining production next steps:
 ## Portfolio Summary
 
 This project demonstrates an agentic business analytics system that translates natural language into validated SQL, runs analysis on real e-commerce data, generates faithful insights, visualizes results, and converts findings into deterministic business recommendations.
+
 
 
 
