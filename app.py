@@ -253,6 +253,24 @@ div[data-testid="stExpander"] summary:hover {
 }
 .empty-state h3 { margin: 0 0 6px 0; font-size: 1.15rem; color: var(--ink); }
 .empty-state p { margin: 0; color: var(--muted); }
+.history-list {
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-top: 12px;
+  box-shadow: 0 1px 2px rgba(16,24,40,.04);
+}
+.history-list h3 { margin: 0 0 8px 0; font-size: .98rem; color: var(--ink); }
+.history-item {
+  display: block;
+  padding: 8px 0;
+  border-top: 1px solid #eef2f7;
+  color: var(--muted);
+  font-size: .86rem;
+  line-height: 1.35;
+}
+.history-item:first-of-type { border-top: none; }
 .panel {
   background: var(--panel);
   border: 1px solid var(--line);
@@ -741,11 +759,14 @@ with chat_tab:
                 st.markdown("**Tables**")
                 render_badges(safety.get("tables_used", []))
 
-            with st.expander("History"):
-                for idx, run in enumerate(st.session_state.chat_runs[:5], start=1):
-                    st.write(f"{idx}. {run.get('display_question') or run.get('question')}")
-            with st.expander("Debug state"):
-                st.json({k: v for k, v in latest.items() if k != "rows"})
+            history_items = "".join(
+                f"<span class='history-item'>{idx}. {run.get('display_question') or run.get('question')}</span>"
+                for idx, run in enumerate(st.session_state.chat_runs[:5], start=1)
+            )
+            st.markdown(
+                f"<div class='history-list'><h3>Recent Questions</h3>{history_items}</div>",
+                unsafe_allow_html=True,
+            )
         else:
             render_panel("Standing by", "Run a question to see validation, KPIs, and tables.")
 
@@ -798,8 +819,9 @@ with eval_tab:
         table = merged_eval_table(eval_results, faithfulness_results)
         st.dataframe(table, use_container_width=True, hide_index=True)
 
-        with st.expander("Raw result details"):
-            st.json({"eval_results": eval_results, "faithfulness_results": faithfulness_results})
+
+
+
 
 
 
