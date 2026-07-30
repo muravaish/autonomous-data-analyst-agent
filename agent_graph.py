@@ -266,7 +266,9 @@ def chart_agent_node(state: AgentState) -> AgentState:
     chart_path = os.path.join("charts", "latest_chart.html")
     title = state.get("display_question") or state.get("question") or "Analysis Result"
 
-    chart_palette = ["#2563eb", "#0f766e", "#d97706", "#dc2626", "#7c3aed"]
+    chart_palette = ["#2563eb", "#0f766e", "#d97706", "#dc2626", "#7c3aed", "#0891b2", "#65a30d", "#ea580c"]
+    question_text = str(title).lower()
+    pie_requested = any(token in question_text for token in ["percentage", "percent", "share", "proportion", "distribution", "breakdown", "split", "composition"])
 
     try:
         if len(df) == 1 and num_cols:
@@ -328,19 +330,39 @@ def chart_agent_node(state: AgentState) -> AgentState:
 
         elif cat_cols and num_cols:
             x_col = cat_cols[0]
-            y_col = num_cols[0]
-            plot_df = df.sort_values(y_col, ascending=True).tail(15)
-            fig = px.bar(
-                plot_df,
-                x=y_col,
-                y=x_col,
-                orientation="h",
-                title=f"{y_col} by {x_col}",
-                labels={x_col: x_col, y_col: y_col},
-                color_discrete_sequence=chart_palette,
-            )
-            fig.update_traces(marker_color="#2563eb")
-            chart_type = "horizontal_bar"
+            y_col = next((col for col in num_cols if any(token in col.lower() for token in ["percent", "percentage", "share", "count", "total"])), num_cols[0])
+
+            if pie_requested and 2 <= len(df) <= 25:
+                plot_df = df.sort_values(y_col, ascending=False).head(15)
+                fig = px.pie(
+                    plot_df,
+                    names=x_col,
+                    values=y_col,
+                    title=f"{y_col} Distribution by {x_col}",
+                    color_discrete_sequence=chart_palette,
+                    hole=0.35,
+                )
+                fig.update_traces(
+                    textinfo="percent+label",
+                    textposition="inside",
+                    insidetextfont=dict(color="#ffffff", size=13),
+                    outsidetextfont=dict(color="#172033", size=12),
+                    marker=dict(line=dict(color="#ffffff", width=2)),
+                )
+                chart_type = "pie"
+            else:
+                plot_df = df.sort_values(y_col, ascending=True).tail(15)
+                fig = px.bar(
+                    plot_df,
+                    x=y_col,
+                    y=x_col,
+                    orientation="h",
+                    title=f"{y_col} by {x_col}",
+                    labels={x_col: x_col, y_col: y_col},
+                    color_discrete_sequence=chart_palette,
+                )
+                fig.update_traces(marker_color="#2563eb")
+                chart_type = "horizontal_bar"
 
         elif num_cols and len(df) > 1:
             fig = px.histogram(
