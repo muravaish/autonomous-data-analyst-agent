@@ -491,6 +491,7 @@ hr.soft { border: none; border-top: 1px solid var(--line); margin: 14px 0; }
 .light-data-table tbody tr:nth-child(even) td { background: #f8fafc; }
 .light-data-table tbody tr:hover td { background: #ecfeff; }
 .table-note { margin-top: 8px; color: #667085; font-size: .86rem; }
+.dashboard-spacer { height: 28px; }
 </style>
 """
 
@@ -626,6 +627,9 @@ def render_light_dataframe(df: pd.DataFrame, max_rows: int = 100) -> None:
         st.info("No rows returned.")
         return
     display_df = df.head(max_rows).copy()
+    for column in display_df.columns:
+        if column.lower() == "accuracy":
+            display_df[column] = display_df[column].map(lambda value: f"{float(value):.0%}" if pd.notna(value) else "")
     display_df.columns = [clean_label(column) for column in display_df.columns]
     table_html = display_df.to_html(index=False, classes="light-data-table", border=0, escape=True)
     st.markdown(f'<div class="table-shell">{table_html}</div>', unsafe_allow_html=True)
@@ -1061,6 +1065,7 @@ else:
 
         st.markdown('<div class="section-title">Benchmark Breakdown</div>', unsafe_allow_html=True)
         render_light_dataframe(benchmark_dataframe(eval_results))
+        st.markdown('<div class="dashboard-spacer"></div>', unsafe_allow_html=True)
 
         chart_cols = st.columns(3, gap="large")
         with chart_cols[0]:
@@ -1086,5 +1091,4 @@ else:
         st.markdown('<div class="section-title">Question-Level Results</div>', unsafe_allow_html=True)
         table = merged_eval_table(eval_results, faithfulness_results)
         render_light_dataframe(table)
-
 
