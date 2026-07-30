@@ -1,44 +1,52 @@
 ﻿# Autonomous Data Analyst + Decision Intelligence Agent
 
-An agentic e-commerce analytics app that converts plain-English business questions into validated SQL, runs the query on the Olist Brazilian E-Commerce database in local SQLite mode or Azure PostgreSQL mode, generates a grounded business insight, creates an interactive chart, and recommends a business action using deterministic decision rules.
+An agentic analytics app that turns plain-English business questions into validated SQL, executes the query on a relational database or uploaded CSV dataset, generates a grounded insight, chooses an appropriate chart, and recommends a business action using deterministic rules.
 
-This project is intentionally different from a prediction dashboard. It is not centered on training a model. Instead, it demonstrates agentic analytics, SQL reasoning, evaluation, and decision support.
+This is not a prediction dashboard. The focus is agentic data analysis, SQL reasoning, answer verification, and decision intelligence.
 
-## Project Positioning
+## What It Does
 
-**Churn project:** prediction + dashboard  
-**This project:** AI data analyst + SQL reasoning + decision intelligence
+- Converts natural-language questions into SQL
+- Validates table and column names against the live schema before execution
+- Runs SQL against local SQLite, uploaded CSV data, or Azure-ready PostgreSQL configuration
+- Generates an insight using only the returned data
+- Chooses charts automatically: pie, bar, grouped bar, line, scatter, histogram, or KPI chart
+- Applies business rules to recommend actions and priority
+- Shows SQL explanation, safety status, result table, chart, and downloadable report
+- Evaluates correctness using gold-standard SQL and numeric faithfulness checks
 
-The core idea is to answer three business questions in one workflow:
+## Screenshots
 
-1. What happened in the data?
-2. Can the answer be verified against the database?
-3. What should the business do next?
+### Uploaded CSV Analysis
 
-## Features
+![Uploaded CSV home](assets/screenshots/01-uploaded-csv-home.png)
 
-- Plain-English question answering over a real e-commerce database
-- LangGraph pipeline with explicit state between nodes
-- Gemini-powered SQL and insight generation
-- Schema-aware SQL validation before execution
-- Database adapter with local SQLite and Azure PostgreSQL support
-- Dockerized Streamlit app with Azure Container Apps deployment template
-- Plotly chart generation saved as HTML
-- Deterministic business rules layer for recommendations
-- Session memory for follow-up questions in Streamlit
-- SQL explanation for non-technical users
-- Confidence and safety status panel
-- Downloadable business analysis report
-- Execution accuracy evaluation harness
-- Faithfulness harness to catch numeric hallucinations
-- Evaluation dashboard with accuracy, faithfulness, failure types, and recommendation-rule breakdown
+### Insight And Recommendation
+
+![Weather answer and recommendation](assets/screenshots/02-weather-answer-recommendation.png)
+
+### Smart Chart Selection
+
+![Weather condition pie chart](assets/screenshots/03-weather-condition-pie-chart.png)
+
+### Result Table
+
+![Weather data table](assets/screenshots/04-weather-data-table.png)
+
+### SQL Transparency
+
+![Generated SQL query](assets/screenshots/05-weather-sql-query.png)
+
+### Evaluation Dashboard
+
+![Evaluation dashboard](assets/screenshots/06-evaluation-dashboard.png)
 
 ## Architecture
 
 ```text
 User Question
    ↓
-Streamlit Chat UI
+Streamlit UI
    ↓
 Router Agent
    ↓
@@ -50,58 +58,52 @@ Execution Agent
    ↓
 Insight Agent
    ↓
-Business Rules / Recommendation Layer
+Recommendation Rules
    ↓
 Chart Agent
    ↓
-Final Answer + SQL + Table + Insight + Recommendation + Chart
+Answer + SQL + Table + Chart + Recommendation + Report
 ```
 
 ## Agent Nodes
 
-**Router Agent**  
-Classifies whether the business question is a single-query or multi-step analysis request.
+| Node | Responsibility |
+|---|---|
+| Router | Decides whether the question is simple or multi-step |
+| SQL Agent | Generates dialect-aware SQL from the live schema |
+| SQL Validation | Blocks hallucinated tables/columns and non-read-only SQL |
+| Execution Agent | Runs the query and returns rows, columns, and stats |
+| Insight Agent | Writes a short narrative from the actual returned data |
+| Recommendation Layer | Applies deterministic KPI rules and action mapping |
+| Chart Agent | Chooses a suitable chart from the question intent and result shape |
 
-**SQL Agent**  
-Generates one dialect-aware SQL query using the live database schema and Olist join rules.
+## Smart Chart Agent
 
-**Execution Agent**  
-Runs validated SQL against the configured analytics database and returns columns, rows, and row count.
+The chart agent does not blindly use one graph type. It combines question intent with the returned data shape.
 
-**Insight Agent**  
-Writes a short narrative using only the actual returned query results.
+| Question/Data Pattern | Chart Type |
+|---|---|
+| Percentage, share, composition, breakdown | Pie chart with top categories + Other |
+| Date/month/year + metric | Line chart |
+| Relationship, correlation, versus | Scatter plot |
+| Category + multiple metrics | Grouped bar chart |
+| Ranking, top, highest, comparison | Horizontal bar chart |
+| Single numeric distribution | Histogram |
+| One-row KPI result | KPI bar chart |
 
-**Business Rules Layer**  
-Maps returned KPIs to deterministic recommendations and priorities.
+## Business KPI And Recommendation Layer
 
-**Chart Agent**  
-Chooses a simple chart type from the result shape and saves `charts/latest_chart.html`.
+The system detects business metrics and maps them to deterministic recommendations.
 
-## Business KPI Layer
+| KPI Pattern | Example Recommendation |
+|---|---|
+| Late delivery rate above threshold | Logistics review |
+| Average review score below threshold | Customer experience review |
+| Cancellation rate above threshold | Seller quality check |
+| Freight percentage above threshold | Shipping cost optimization |
+| Revenue drop above threshold | Pricing or promotion investigation |
 
-The system detects and reasons over e-commerce KPIs such as:
-
-- Late delivery rate
-- Average review score
-- Seller revenue
-- Freight cost percentage
-- Order cancellation rate
-- Monthly revenue trend
-- Customer repeat purchase rate
-
-## Recommendation Rules
-
-Examples of deterministic rules in `business_rules.py`:
-
-| KPI Pattern | Rule | Recommendation |
-|---|---|---|
-| `late_delivery_rate > 15%` | `logistics_risk_rule` | Logistics review |
-| `avg_review_score < 3.5` | `customer_experience_rule` | Customer experience review |
-| `cancellation_rate > 10%` | `seller_quality_rule` | Seller quality check |
-| `freight_percentage > 30%` | `shipping_cost_rule` | Shipping cost optimization |
-| `revenue_drop > 20%` | `revenue_decline_rule` | Pricing or promotion investigation |
-
-This layer is deterministic Python logic, not another LLM judgment step. That makes the recommendation path explainable and interview-friendly.
+This layer is plain Python business logic, not another LLM judge, so the recommendation path is explainable.
 
 ## Evaluation Results
 
@@ -121,54 +123,44 @@ Execution accuracy by difficulty:
 | Medium | 6/6 (100.0%) |
 | Hard | 3/6 (50.0%) |
 
-Current failure breakdown:
+The evaluation layer checks two things:
 
-| Failure Type | Count |
-|---|---:|
-| `misread_question_or_other` | 2 |
-| `sql_execution_error` | 1 |
-
-Recommendation-rule breakdown from the saved evaluation set:
-
-| Rule | Count |
-|---|---:|
-| `monitoring_rule` | 11 |
-| `concentration_risk_rule` | 5 |
-| `customer_experience_rule` | 2 |
-| `logistics_risk_rule` | 1 |
-| `shipping_cost_rule` | 1 |
-
-## Why The Evaluation Layer Matters
-
-Most LLM-over-database demos only check whether the answer sounds fluent. This project checks correctness directly.
-
-**Execution accuracy** asks:
-
-```text
-Did the generated SQL return the same answer as the gold-standard SQL?
-```
-
-**Faithfulness checking** asks:
-
-```text
-Did the written insight mention only numbers that actually appear in the returned data?
-```
-
-The faithfulness harness is deterministic. It extracts numbers from the insight text and checks them against the SQL result within a rounding tolerance. This avoids using a second LLM as a judge.
+- Execution accuracy: whether generated SQL returns the same result as gold-standard SQL
+- Faithfulness: whether numbers mentioned in the written insight are grounded in the returned data
 
 ## Example Questions
 
-Try these in the Streamlit app:
+For the Olist e-commerce database:
 
 ```text
-What is the average review score for each payment type?
 Which sellers have the highest late delivery risk?
+What is the average review score for each payment type?
 Which sellers generated the highest total revenue?
 What is the average freight cost as a percentage of item price?
-How many orders were delivered later than their estimated delivery date?
 ```
 
-## How To Run
+For an uploaded weather CSV:
+
+```text
+Show the percentage distribution of weather conditions across all locations.
+Compare PM2.5 levels across the top 15 most polluted cities.
+Show the relationship between temperature and humidity.
+Which locations should be flagged for weather or air quality risk?
+```
+
+## Tech Stack
+
+- Python
+- LangGraph
+- Google Gemini
+- SQLite
+- Azure-ready PostgreSQL adapter
+- Streamlit
+- Plotly
+- Pandas
+- GitHub Actions
+
+## How To Run Locally
 
 Create and activate a virtual environment:
 
@@ -184,36 +176,13 @@ Create your environment file:
 Copy-Item .env.example .env
 ```
 
-Add your Gemini key to `.env`:
+Add your Gemini key:
 
 ```text
 GOOGLE_API_KEY=your_key_here
 ```
 
-## Azure/PostgreSQL Mode
-
-The app is Azure-ready through `db_adapter.py`. Local SQLite remains the default for development, but the same LangGraph pipeline can run against Azure Database for PostgreSQL after the Olist tables are loaded there.
-
-Local mode:
-
-```text
-DATABASE_BACKEND=sqlite
-SQLITE_DB_PATH=olist.db
-```
-
-Azure PostgreSQL mode:
-
-```text
-DATABASE_BACKEND=postgres
-DATABASE_URL=postgresql://username:password@your-server.postgres.database.azure.com:5432/your_database?sslmode=require
-DATABASE_SCHEMA=public
-```
-
-The SQL Agent automatically reads the live schema, switches the prompt dialect to PostgreSQL, validates table references, blocks non-read-only SQL, and executes through the same adapter interface.
-
-By default, make sure `olist.db` is in the project root. For Azure mode, configure the PostgreSQL settings below.
-
-Run the Streamlit app:
+Run the app:
 
 ```powershell
 streamlit run app.py
@@ -227,22 +196,41 @@ http://localhost:8501
 
 ## Evaluation Commands
 
-Run the execution accuracy harness:
+Run execution accuracy evaluation:
 
 ```powershell
 python eval_harness.py
 ```
 
-Run the faithfulness harness:
+Run faithfulness evaluation:
 
 ```powershell
 python faithfulness_harness.py
 ```
 
-Enrich existing evaluation results with recommendation-rule fields without making new API calls:
+Enrich saved evaluation results with recommendation-rule fields:
 
 ```powershell
 python decision_enrichment.py
+```
+
+## Azure-Ready Database Mode
+
+Local SQLite is the default for development. The same pipeline can also run against Azure Database for PostgreSQL through `db_adapter.py`.
+
+SQLite mode:
+
+```text
+DATABASE_BACKEND=sqlite
+SQLITE_DB_PATH=olist.db
+```
+
+PostgreSQL mode:
+
+```text
+DATABASE_BACKEND=postgres
+DATABASE_URL=postgresql://username:password@your-server.postgres.database.azure.com:5432/your_database?sslmode=require
+DATABASE_SCHEMA=public
 ```
 
 ## Important Files
@@ -250,64 +238,28 @@ python decision_enrichment.py
 | File | Purpose |
 |---|---|
 | `agent_graph.py` | LangGraph pipeline and agent nodes |
-| `db_adapter.py` | Database adapter for local SQLite and Azure PostgreSQL |
+| `app.py` | Streamlit chat UI and evaluation dashboard |
+| `db_adapter.py` | SQLite/PostgreSQL database adapter |
 | `business_rules.py` | KPI detection and deterministic recommendation rules |
-| `app.py` | Streamlit chat app and evaluation dashboard |
 | `eval_harness.py` | Execution accuracy evaluation |
 | `faithfulness_harness.py` | Numeric faithfulness evaluation |
-| `decision_enrichment.py` | Adds business-rule fields to saved eval results |
-| `gold_qa.json` | Gold-standard evaluation questions |
-| `Dockerfile` | Container image definition for deployment |
-| `.github/workflows/deploy-azure.yml` | Manual Azure Container Apps deployment workflow |
-| `docs/azure-deployment.md` | Azure deployment guide |
-| `olist.db` | Local SQLite database for development mode |
+| `gold_qa.json` | Gold-standard question set |
+| `assets/screenshots/` | README and portfolio screenshots |
 
-## Demo Recording Script
+## Current Limitations
 
-A short 2-3 minute demo can follow this flow:
-
-1. Open the Streamlit app.
-2. Ask: `Which sellers have the highest late delivery risk?`
-3. Show the generated SQL and result table.
-4. Explain the business recommendation and priority.
-5. Show the chart.
-6. Switch to the Evaluation Dashboard.
-7. Point out execution accuracy, faithfulness, and one real failure category.
-8. Download the business report.
-
-## CI/CD And Productionization
-
-The repository includes a GitHub Actions CI workflow in `.github/workflows/ci.yml`. On every push or pull request, it installs dependencies, compiles the Python files, runs the deterministic decision-enrichment step without making any Gemini API calls, and validates that the Docker image builds.
-
-Production-ready pieces now included:
-
-- Dockerfile for containerizing the Streamlit app
-- Docker Compose file for local container testing
-- Streamlit server configuration for container hosting
-- Azure PostgreSQL support through `db_adapter.py`
-- Manual Azure Container Apps deployment workflow in `.github/workflows/deploy-azure.yml`
-- Azure deployment guide in `docs/azure-deployment.md`
-
-Remaining production next steps:
-
-- Create the actual Azure resources in your Azure account
-- Load Olist tables into Azure Database for PostgreSQL
-- Add GitHub Actions secrets for Azure deployment
-- Add n8n or scheduled jobs for automated weekly KPI reports
+- Uploaded CSV analysis depends on the model correctly interpreting generic column names
+- Gold-standard evaluation is strongest for the Olist dataset; uploaded CSV evaluation is a future extension
+- Complex multi-step business questions can still fail when joins or metric definitions are ambiguous
+- Azure deployment templates are included, but local Streamlit remains the primary tested run mode
 
 ## Future Improvements
 
-- Add dataset adapter files so the same architecture can support other datasets
-- Add recommendation-specific gold labels and rule accuracy evaluation
-- Add richer conversational memory for multi-turn analysis
-- Add optional seller risk scoring as a small ML extension
+- Add a small gold evaluation set for uploaded CSV datasets
+- Add richer memory for multi-turn follow-up analysis
+- Add optional scheduled KPI reports through n8n or cloud workflows
+- Add more domain-specific business rule packs for non-e-commerce datasets
 
 ## Portfolio Summary
 
-This project demonstrates an agentic business analytics system that translates natural language into validated SQL, runs analysis on real e-commerce data, generates faithful insights, visualizes results, and converts findings into deterministic business recommendations.
-
-
-
-
-
-
+This project demonstrates an agentic business analytics system that translates natural language into validated SQL, runs analysis on real data, generates faithful insights, visualizes results, and converts findings into deterministic business recommendations.
