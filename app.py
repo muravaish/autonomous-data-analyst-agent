@@ -728,7 +728,7 @@ def render_eval_bar_chart(df: pd.DataFrame, x_col: str, y_col: str, title: str) 
         x=x_col,
         y=y_col,
         text=text_values,
-        title=None,
+        title="",
         color_discrete_sequence=["#2563eb"],
     )
     fig.update_traces(
