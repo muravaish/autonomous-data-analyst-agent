@@ -266,6 +266,8 @@ def chart_agent_node(state: AgentState) -> AgentState:
     chart_path = os.path.join("charts", "latest_chart.html")
     title = state.get("display_question") or state.get("question") or "Analysis Result"
 
+    chart_palette = ["#2563eb", "#0f766e", "#d97706", "#dc2626", "#7c3aed"]
+
     try:
         if len(df) == 1 and num_cols:
             metric_df = df[num_cols].T.reset_index()
@@ -277,6 +279,7 @@ def chart_agent_node(state: AgentState) -> AgentState:
                 title="KPI Snapshot",
                 text="Value",
                 labels={"Metric": "Metric", "Value": "Value"},
+                color_discrete_sequence=chart_palette,
             )
             fig.update_traces(texttemplate="%{text:.2f}", textposition="outside")
             chart_type = "kpi_bar"
@@ -292,6 +295,7 @@ def chart_agent_node(state: AgentState) -> AgentState:
                 markers=True,
                 title=title,
                 labels={"value": "Value", "variable": "Metric"},
+                color_discrete_sequence=chart_palette,
             )
             chart_type = "line"
 
@@ -303,6 +307,7 @@ def chart_agent_node(state: AgentState) -> AgentState:
                 size=num_cols[2] if len(num_cols) >= 3 else None,
                 title=title,
                 hover_data=df.columns,
+                color_discrete_sequence=chart_palette,
             )
             chart_type = "scatter"
 
@@ -317,6 +322,7 @@ def chart_agent_node(state: AgentState) -> AgentState:
                 barmode="group",
                 title=title,
                 labels={"value": "Value", "variable": "Metric"},
+                color_discrete_sequence=chart_palette,
             )
             chart_type = "grouped_bar"
 
@@ -331,7 +337,9 @@ def chart_agent_node(state: AgentState) -> AgentState:
                 orientation="h",
                 title=f"{y_col} by {x_col}",
                 labels={x_col: x_col, y_col: y_col},
+                color_discrete_sequence=chart_palette,
             )
+            fig.update_traces(marker_color="#2563eb")
             chart_type = "horizontal_bar"
 
         elif num_cols and len(df) > 1:
@@ -340,7 +348,9 @@ def chart_agent_node(state: AgentState) -> AgentState:
                 x=num_cols[0],
                 nbins=min(30, max(8, len(df) // 2)),
                 title=f"Distribution of {num_cols[0]}",
+                color_discrete_sequence=chart_palette,
             )
+            fig.update_traces(marker_color="#2563eb")
             chart_type = "histogram"
 
         else:
@@ -354,7 +364,14 @@ def chart_agent_node(state: AgentState) -> AgentState:
             height=520,
             margin=dict(l=60, r=30, t=70, b=70),
             legend_title_text="Metric",
+            paper_bgcolor="#ffffff",
+            plot_bgcolor="#ffffff",
+            font=dict(color="#172033"),
+            title_font=dict(color="#172033", size=20),
+            hoverlabel=dict(bgcolor="#ffffff", font_color="#172033", bordercolor="#cbd5e1"),
         )
+        fig.update_xaxes(gridcolor="#e5e7eb", zerolinecolor="#cbd5e1", title_font=dict(color="#172033"), tickfont=dict(color="#172033"))
+        fig.update_yaxes(gridcolor="#eef2f7", zerolinecolor="#cbd5e1", title_font=dict(color="#172033"), tickfont=dict(color="#172033"))
         fig.write_html(chart_path)
         state["chart_path"] = chart_path
         state["chart_type"] = chart_type
@@ -440,10 +457,4 @@ if __name__ == "__main__":
     print(f"Recommendation: {final_state.get('recommendation')} ({final_state.get('priority')})")
     print(f"Action: {final_state.get('recommended_action')}")
     print(f"Chart: {final_state['chart_path']}")
-
-
-
-
-
-
 

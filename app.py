@@ -453,6 +453,43 @@ div[data-testid="stExpander"] summary:hover {
 .section-title { font-size: 1.05rem; font-weight: 700; margin: 18px 0 8px 0; color: var(--ink); }
 .small-muted { color: var(--muted); font-size: .9rem; }
 hr.soft { border: none; border-top: 1px solid var(--line); margin: 14px 0; }
+.table-shell {
+  width: 100%;
+  max-height: 540px;
+  overflow: auto;
+  background: #ffffff;
+  border: 1px solid #dbe3ef;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(16,24,40,.04);
+}
+.light-data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .92rem;
+  color: #172033;
+  background: #ffffff;
+}
+.light-data-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #eff6ff;
+  color: #1e3a8a;
+  border-bottom: 1px solid #bfdbfe;
+  padding: 11px 12px;
+  text-align: left;
+  font-weight: 750;
+}
+.light-data-table tbody td {
+  background: #ffffff;
+  color: #172033;
+  border-bottom: 1px solid #eef2f7;
+  padding: 10px 12px;
+  vertical-align: top;
+}
+.light-data-table tbody tr:nth-child(even) td { background: #f8fafc; }
+.light-data-table tbody tr:hover td { background: #ecfeff; }
+.table-note { margin-top: 8px; color: #667085; font-size: .86rem; }
 </style>
 """
 
@@ -582,6 +619,17 @@ def result_dataframe(result: dict) -> pd.DataFrame:
 
 def clean_label(value: str) -> str:
     return str(value).replace("_", " ").title()
+
+def render_light_dataframe(df: pd.DataFrame, max_rows: int = 100) -> None:
+    if df.empty:
+        st.info("No rows returned.")
+        return
+    display_df = df.head(max_rows).copy()
+    display_df.columns = [clean_label(column) for column in display_df.columns]
+    table_html = display_df.to_html(index=False, classes="light-data-table", border=0, escape=True)
+    st.markdown(f'<div class="table-shell">{table_html}</div>', unsafe_allow_html=True)
+    if len(df) > max_rows:
+        st.markdown(f'<div class="table-note">Showing first {max_rows} of {len(df)} rows.</div>', unsafe_allow_html=True)
 
 
 def percent(numerator: int | float, denominator: int | float) -> float:
@@ -868,7 +916,7 @@ if main_view == "Ask":
                 render_chart_from_state(latest)
 
             elif result_view == "Data":
-                st.dataframe(result_dataframe(latest), use_container_width=True, hide_index=True)
+                render_light_dataframe(result_dataframe(latest))
 
             else:
                 sql_text = html.escape(latest.get("sql") or "No SQL returned.")
@@ -950,7 +998,7 @@ else:
             diff_df = difficulty_dataframe(execution)
             if not diff_df.empty:
                 st.bar_chart(diff_df, x="difficulty", y="accuracy")
-                st.dataframe(diff_df, use_container_width=True, hide_index=True)
+                render_light_dataframe(diff_df)
 
         with chart_cols[1]:
             st.markdown('<div class="section-title">Failure Types</div>', unsafe_allow_html=True)
@@ -959,18 +1007,16 @@ else:
                 st.success("No execution failures in the saved file.")
             else:
                 st.bar_chart(fail_df, x="failure_category", y="count")
-                st.dataframe(fail_df, use_container_width=True, hide_index=True)
+                render_light_dataframe(fail_df)
 
         with chart_cols[2]:
             st.markdown('<div class="section-title">Recommendation Rules</div>', unsafe_allow_html=True)
             rec_df = recommendation_rule_dataframe(eval_results)
             if not rec_df.empty:
                 st.bar_chart(rec_df, x="recommendation_rule", y="count")
-                st.dataframe(rec_df, use_container_width=True, hide_index=True)
+                render_light_dataframe(rec_df)
 
         st.markdown('<div class="section-title">Question-Level Results</div>', unsafe_allow_html=True)
         table = merged_eval_table(eval_results, faithfulness_results)
-        st.dataframe(table, use_container_width=True, hide_index=True)
-
-
+        render_light_dataframe(table)
 
