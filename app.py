@@ -47,6 +47,12 @@ THEME_CSS = """
 .stApp { background: var(--bg); color: var(--ink); }
 .block-container { padding-top: 1.5rem; padding-bottom: 2.5rem; max-width: 1400px; }
 [data-testid="stHeader"] { background: rgba(246,247,251,0.85); backdrop-filter: blur(10px); }
+[data-testid="stToolbar"],
+[data-testid="stDecoration"],
+[data-testid="stStatusWidget"] {
+  visibility: hidden !important;
+  height: 0 !important;
+}
 [data-testid="stMetric"] {
   background: var(--panel);
   border: 1px solid var(--line);
@@ -58,12 +64,39 @@ THEME_CSS = """
 [data-testid="stMetricValue"] { color: var(--ink); font-size: 1.45rem; }
 .stTabs [data-baseweb="tab-list"] { gap: 8px; }
 .stTabs [data-baseweb="tab"] {
-  background: #ffffff;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 10px 18px;
+  background: #ffffff !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 8px !important;
+  padding: 10px 18px !important;
+  color: #475569 !important;
 }
-.stTabs [aria-selected="true"] { border-color: var(--blue); color: var(--blue); }
+.stTabs [data-baseweb="tab"] p,
+.stTabs [data-baseweb="tab"] span,
+.stTabs [data-baseweb="tab"] div {
+  color: #475569 !important;
+  font-weight: 650 !important;
+}
+.stTabs [data-baseweb="tab"]:hover,
+.stTabs [data-baseweb="tab"]:focus {
+  background: #eff6ff !important;
+  border-color: #bfdbfe !important;
+}
+.stTabs [data-baseweb="tab"]:hover p,
+.stTabs [data-baseweb="tab"]:hover span,
+.stTabs [data-baseweb="tab"]:focus p,
+.stTabs [data-baseweb="tab"]:focus span {
+  color: var(--blue) !important;
+}
+.stTabs [aria-selected="true"] {
+  border-color: var(--blue) !important;
+  color: var(--blue) !important;
+  background: #eff6ff !important;
+}
+.stTabs [aria-selected="true"] p,
+.stTabs [aria-selected="true"] span,
+.stTabs [aria-selected="true"] div {
+  color: var(--blue) !important;
+}
 /* Keep Streamlit controls in light theme, including hover/focus states. */
 .stTextInput input,
 .stTextInput input:hover,
@@ -138,6 +171,20 @@ THEME_CSS = """
 [data-testid="stFileUploader"] span,
 [data-testid="stFileUploader"] p {
   color: var(--muted) !important;
+}
+[data-testid="stFileUploaderFile"],
+[data-testid="stFileUploaderFile"] div,
+[data-testid="stFileUploaderFile"] span {
+  background: #ffffff !important;
+  color: var(--ink) !important;
+  border-color: #dbe3ef !important;
+}
+[data-testid="stFileUploaderFile"] button,
+[data-testid="stFileUploaderFile"] button:hover,
+[data-testid="stFileUploaderFile"] button:focus {
+  background: #eff6ff !important;
+  color: var(--blue) !important;
+  border-color: #bfdbfe !important;
 }
 div[data-testid="stExpander"] details,
 div[data-testid="stExpander"] summary,
@@ -666,7 +713,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-chat_tab, eval_tab = st.tabs(["Chat Analyst", "Evaluation Dashboard"])
+chat_tab, eval_tab = st.tabs(["Ask", "Evaluation"])
 
 with chat_tab:
     left, right = st.columns([0.67, 0.33], gap="large")
@@ -741,7 +788,7 @@ with chat_tab:
             top_metrics[2].metric("Priority", latest.get("priority") or "Low")
             top_metrics[3].metric("Chart", clean_label(latest.get("chart_type") or "None"))
 
-            answer_tab, chart_tab, data_tab, sql_tab = st.tabs(["Answer", "Chart", "Data", "SQL"])
+            answer_tab, chart_tab, data_tab, sql_tab = st.tabs(["Answer", "Chart", "Data", "SQL Query"])
 
             with answer_tab:
                 render_recommendation(latest)
@@ -861,12 +908,4 @@ with eval_tab:
         st.markdown('<div class="section-title">Question-Level Results</div>', unsafe_allow_html=True)
         table = merged_eval_table(eval_results, faithfulness_results)
         st.dataframe(table, use_container_width=True, hide_index=True)
-
-
-
-
-
-
-
-
 
