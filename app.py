@@ -1,4 +1,5 @@
 ﻿import base64
+import html
 import json
 import os
 import re
@@ -760,8 +761,8 @@ with chat_tab:
                 st.dataframe(result_dataframe(latest), use_container_width=True, hide_index=True)
 
             with sql_tab:
-                sql_text = latest.get("sql") or "No SQL returned."
-                explanation_items = "".join(f"<li>{item}</li>" for item in latest.get("sql_explanation", []))
+                sql_text = html.escape(latest.get("sql") or "No SQL returned.")
+                explanation_items = "".join(f"<li>{html.escape(str(item))}</li>" for item in latest.get("sql_explanation", []))
                 if not explanation_items:
                     explanation_items = "<li>No explanation returned.</li>"
                 st.markdown(
@@ -860,6 +861,7 @@ with eval_tab:
         st.markdown('<div class="section-title">Question-Level Results</div>', unsafe_allow_html=True)
         table = merged_eval_table(eval_results, faithfulness_results)
         st.dataframe(table, use_container_width=True, hide_index=True)
+
 
 
 
