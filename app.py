@@ -728,7 +728,7 @@ def render_eval_bar_chart(df: pd.DataFrame, x_col: str, y_col: str, title: str) 
         x=x_col,
         y=y_col,
         text=text_values,
-        title="",
+        title=title,
         color_discrete_sequence=["#2563eb"],
     )
     fig.update_traces(
@@ -742,7 +742,7 @@ def render_eval_bar_chart(df: pd.DataFrame, x_col: str, y_col: str, title: str) 
     fig.update_layout(
         template="plotly_white",
         height=360,
-        margin=dict(l=40, r=20, t=20, b=105),
+        margin=dict(l=40, r=20, t=58, b=105),
         paper_bgcolor="#ffffff",
         plot_bgcolor="#ffffff",
         font=dict(color="#172033"),
@@ -1043,14 +1043,12 @@ else:
 
         chart_cols = st.columns(3, gap="large")
         with chart_cols[0]:
-            st.markdown('<div class="section-title">Accuracy By Difficulty</div>', unsafe_allow_html=True)
             diff_df = difficulty_dataframe(execution)
             if not diff_df.empty:
                 render_eval_bar_chart(diff_df, "difficulty", "accuracy", "Accuracy By Difficulty")
                 render_light_dataframe(diff_df)
 
         with chart_cols[1]:
-            st.markdown('<div class="section-title">Failure Types</div>', unsafe_allow_html=True)
             fail_df = failure_dataframe(execution["failures"])
             if fail_df.empty:
                 st.success("No execution failures in the saved file.")
@@ -1059,7 +1057,6 @@ else:
                 render_light_dataframe(fail_df)
 
         with chart_cols[2]:
-            st.markdown('<div class="section-title">Recommendation Rules</div>', unsafe_allow_html=True)
             rec_df = recommendation_rule_dataframe(eval_results)
             if not rec_df.empty:
                 render_eval_bar_chart(rec_df, "recommendation_rule", "count", "Recommendation Rules")
