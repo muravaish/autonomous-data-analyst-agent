@@ -516,5 +516,279 @@
       }
     ],
     "insight": "Based on the data, 37.77% of orders with 1-star reviews were delivered late."
+  },
+  {
+    "id": "ext_001",
+    "difficulty": "hard",
+    "question": "Which seller state has the highest late delivery rate among seller states with at least 100 delivered orders?",
+    "execution_match": true,
+    "faithful": true,
+    "faithfulness_score": 1.0,
+    "numbers_mentioned": 1,
+    "numbers_checked": 0,
+    "numbers_grounded": 0,
+    "numbers_ignored_as_context": 1,
+    "possible_hallucinations": [],
+    "checked_numbers": [
+      {
+        "raw": "100",
+        "value": 100.0,
+        "status": "ignored_context_number",
+        "matched_data_value": null
+      }
+    ],
+    "insight": "Based on the provided data, MA (Massachusetts) is the seller state with the highest late delivery rate among seller states that have at least 100 delivered orders. The dataset does not provide the exact late delivery percentage or comparative figures for other states."
+  },
+  {
+    "id": "ext_002",
+    "difficulty": "hard",
+    "question": "Among product categories with at least 500 order items, which category has the highest average freight cost as a percentage of item price?",
+    "execution_match": true,
+    "faithful": true,
+    "faithfulness_score": 1.0,
+    "numbers_mentioned": 2,
+    "numbers_checked": 1,
+    "numbers_grounded": 1,
+    "numbers_ignored_as_context": 1,
+    "possible_hallucinations": [],
+    "checked_numbers": [
+      {
+        "raw": "500",
+        "value": 500.0,
+        "status": "ignored_context_number",
+        "matched_data_value": null
+      },
+      {
+        "raw": "68.35%",
+        "value": 68.35,
+        "status": "grounded",
+        "matched_data_value": 68.3516607180111
+      }
+    ],
+    "insight": "Among product categories with at least 500 order items, electronics has the highest average freight cost at 68.35% of the item price. The provided data does not contain information on any other product categories to compare against."
+  },
+  {
+    "id": "ext_003",
+    "difficulty": "hard",
+    "question": "For delivered orders in 2018, which month had the highest average delivery delay in days?",
+    "execution_match": false,
+    "faithful": true,
+    "faithfulness_score": 1.0,
+    "numbers_mentioned": 4,
+    "numbers_checked": 2,
+    "numbers_grounded": 2,
+    "numbers_ignored_as_context": 2,
+    "possible_hallucinations": [],
+    "checked_numbers": [
+      {
+        "raw": "2018",
+        "value": 2018.0,
+        "status": "ignored_context_number",
+        "matched_data_value": null
+      },
+      {
+        "raw": "2018",
+        "value": 2018.0,
+        "status": "ignored_context_number",
+        "matched_data_value": null
+      },
+      {
+        "raw": "10",
+        "value": 10.0,
+        "status": "grounded",
+        "matched_data_value": null
+      },
+      {
+        "raw": "84.09",
+        "value": 84.09,
+        "status": "grounded",
+        "matched_data_value": 84.08861882705241
+      }
+    ],
+    "insight": "For delivered orders in 2018, October ('2018-10') had the highest average delivery delay, standing at approximately 84.09 days. The provided data only includes results for this single month, so a comparison across other months cannot be made."
+  },
+  {
+    "id": "ext_004",
+    "difficulty": "medium",
+    "question": "Which payment type has the highest average payment value per transaction?",
+    "execution_match": true,
+    "faithful": true,
+    "faithfulness_score": 1.0,
+    "numbers_mentioned": 1,
+    "numbers_checked": 1,
+    "numbers_grounded": 1,
+    "numbers_ignored_as_context": 0,
+    "possible_hallucinations": [],
+    "checked_numbers": [
+      {
+        "raw": "163.32",
+        "value": 163.32,
+        "status": "grounded",
+        "matched_data_value": 163.31902063936454
+      }
+    ],
+    "insight": "Based on the provided data, credit card is the only payment type listed and therefore has the highest average payment value per transaction, with an average of approximately 163.32. The data does not provide information on any other payment types to allow for a comparison."
+  },
+  {
+    "id": "ext_005",
+    "difficulty": "hard",
+    "question": "Which customer state has the highest cancellation rate among states with at least 100 orders?",
+    "execution_match": false,
+    "faithful": true,
+    "faithfulness_score": 1.0,
+    "numbers_mentioned": 2,
+    "numbers_checked": 1,
+    "numbers_grounded": 1,
+    "numbers_ignored_as_context": 1,
+    "possible_hallucinations": [],
+    "checked_numbers": [
+      {
+        "raw": "100",
+        "value": 100.0,
+        "status": "ignored_context_number",
+        "matched_data_value": null
+      },
+      {
+        "raw": "1.19%",
+        "value": 1.19,
+        "status": "grounded",
+        "matched_data_value": 0.011857707509881422
+      }
+    ],
+    "insight": "Based on the provided data, Rond\u00f4nia (RO) is the only state that meets the criteria of having at least 100 orders, exhibiting a cancellation rate of approximately 1.19%. The dataset does not contain sufficient information to compare cancellation rates across multiple states that meet this volume threshold."
+  },
+  {
+    "id": "ext_006",
+    "difficulty": "medium",
+    "question": "Which product category generated the highest item revenue excluding freight?",
+    "execution_match": true,
+    "faithful": true,
+    "faithfulness_score": 1.0,
+    "numbers_mentioned": 1,
+    "numbers_checked": 1,
+    "numbers_grounded": 1,
+    "numbers_ignored_as_context": 0,
+    "possible_hallucinations": [],
+    "checked_numbers": [
+      {
+        "raw": "1,258,681.34",
+        "value": 1258681.34,
+        "status": "grounded",
+        "matched_data_value": 1258681.34
+      }
+    ],
+    "insight": "Based on the provided data, the health_beauty product category generated the highest item revenue excluding freight, totaling 1,258,681.34. The provided dataset only contains this single category, so it is not possible to compare it against other categories."
+  },
+  {
+    "id": "ext_007",
+    "difficulty": "hard",
+    "question": "Which seller has the highest late delivery rate among sellers with at least 50 delivered orders?",
+    "execution_match": false,
+    "faithful": true,
+    "faithfulness_score": 1.0,
+    "numbers_mentioned": 3,
+    "numbers_checked": 2,
+    "numbers_grounded": 2,
+    "numbers_ignored_as_context": 1,
+    "possible_hallucinations": [],
+    "checked_numbers": [
+      {
+        "raw": "50",
+        "value": 50.0,
+        "status": "ignored_context_number",
+        "matched_data_value": null
+      },
+      {
+        "raw": "32.1%",
+        "value": 32.1,
+        "status": "grounded",
+        "matched_data_value": 0.32098765432098764
+      },
+      {
+        "raw": "0.32",
+        "value": 0.32,
+        "status": "grounded",
+        "matched_data_value": 0.32098765432098764
+      }
+    ],
+    "insight": "Based on the provided data, the seller with the highest late delivery rate among sellers with at least 50 delivered orders is seller '54965bbe3e4f07ae045b90b0b8541f52'. This seller recorded a late delivery rate of approximately 32.1% (or 0.32)."
+  },
+  {
+    "id": "ext_008",
+    "difficulty": "medium",
+    "question": "What percentage of total payment value comes from credit card payments?",
+    "execution_match": true,
+    "faithful": true,
+    "faithfulness_score": 1.0,
+    "numbers_mentioned": 1,
+    "numbers_checked": 1,
+    "numbers_grounded": 1,
+    "numbers_ignored_as_context": 0,
+    "possible_hallucinations": [],
+    "checked_numbers": [
+      {
+        "raw": "78.34%",
+        "value": 78.34,
+        "status": "grounded",
+        "matched_data_value": 78.34458352834916
+      }
+    ],
+    "insight": "Credit card payments account for approximately 78.34% of the total payment value. This indicates that credit cards are the dominant payment method used by customers."
+  },
+  {
+    "id": "ext_009",
+    "difficulty": "hard",
+    "question": "Among product categories with at least 300 reviews, which category has the highest average review score?",
+    "execution_match": true,
+    "faithful": true,
+    "faithfulness_score": 1.0,
+    "numbers_mentioned": 2,
+    "numbers_checked": 1,
+    "numbers_grounded": 1,
+    "numbers_ignored_as_context": 1,
+    "possible_hallucinations": [],
+    "checked_numbers": [
+      {
+        "raw": "300",
+        "value": 300.0,
+        "status": "ignored_context_number",
+        "matched_data_value": null
+      },
+      {
+        "raw": "4.45",
+        "value": 4.45,
+        "status": "grounded",
+        "matched_data_value": 4.446265938069216
+      }
+    ],
+    "insight": "Among product categories with at least 300 reviews, the books_general_interest category has the highest average review score, coming in at approximately 4.45. The provided data only includes this single category meeting the criteria, so a comparative ranking beyond this is not possible."
+  },
+  {
+    "id": "ext_010",
+    "difficulty": "hard",
+    "question": "Which customer state generated the highest delivered-order revenue including freight in 2017?",
+    "execution_match": true,
+    "faithful": true,
+    "faithfulness_score": 1.0,
+    "numbers_mentioned": 2,
+    "numbers_checked": 1,
+    "numbers_grounded": 1,
+    "numbers_ignored_as_context": 1,
+    "possible_hallucinations": [],
+    "checked_numbers": [
+      {
+        "raw": "2017",
+        "value": 2017.0,
+        "status": "ignored_context_number",
+        "matched_data_value": null
+      },
+      {
+        "raw": "2,428,002.62",
+        "value": 2428002.62,
+        "status": "grounded",
+        "matched_data_value": 2428002.62
+      }
+    ],
+    "insight": "Based on the provided data, the customer state that generated the highest delivered-order revenue including freight in 2017 was SP, with a total revenue of 2,428,002.62. The dataset only includes this single result and does not provide revenue figures for any other states to allow for comparison."
   }
 ]

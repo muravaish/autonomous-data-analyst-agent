@@ -2,13 +2,22 @@
 import time
 from agent_graph import build_graph
 
-GOLD_PATH = "gold_qa.json"
+GOLD_PATHS = [("curated", "gold_qa.json"), ("robustness", "extended_gold_qa.json")]
 RESULTS_PATH = "eval_results.json"
 
 
 def load_gold_set():
-    with open(GOLD_PATH, "r") as f:
-        return json.load(f)
+    gold_items = []
+    for benchmark, path in GOLD_PATHS:
+        try:
+            with open(path, "r") as f:
+                items = json.load(f)
+        except FileNotFoundError:
+            continue
+        for item in items:
+            item.setdefault("benchmark", benchmark)
+            gold_items.append(item)
+    return gold_items
 
 
 
@@ -164,6 +173,7 @@ def run_evaluation():
             print(f"  PIPELINE CRASHED: {e}")
             results.append({
                 "id": item["id"],
+                "benchmark": item.get("benchmark", "curated"),
                 "difficulty": item["difficulty"],
                 "question": item["question"],
                 "match": False,
@@ -206,6 +216,7 @@ def run_evaluation():
 
         results.append({
             "id": item["id"],
+            "benchmark": item.get("benchmark", "curated"),
             "difficulty": item["difficulty"],
             "question": item["question"],
             "match": match,
@@ -273,6 +284,10 @@ def run_evaluation():
 
 if __name__ == "__main__":
     run_evaluation()
+
+
+
+
 
 
 

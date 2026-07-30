@@ -673,6 +673,23 @@ def difficulty_dataframe(summary: dict) -> pd.DataFrame:
     )
 
 
+
+def benchmark_dataframe(eval_results: list[dict]) -> pd.DataFrame:
+    buckets = {}
+    for row in eval_results:
+        benchmark = row.get("benchmark") or ("robustness" if str(row.get("id", "")).startswith("ext_") else "curated")
+        bucket = buckets.setdefault(benchmark, {"correct": 0, "total": 0})
+        bucket["total"] += 1
+        bucket["correct"] += int(bool(row.get("match")))
+    return pd.DataFrame(
+        {
+            "benchmark": clean_label(benchmark),
+            "accuracy": percent(stats["correct"], stats["total"]),
+            "correct": stats["correct"],
+            "total": stats["total"],
+        }
+        for benchmark, stats in buckets.items()
+    )
 def failure_dataframe(failures: dict) -> pd.DataFrame:
     if not failures:
         return pd.DataFrame(columns=["failure_category", "count"])
@@ -694,6 +711,7 @@ def merged_eval_table(eval_results: list[dict], faithfulness_results: list[dict]
         faithful_row = faithfulness_by_id.get(row.get("id"), {})
         rows.append({
             "id": row.get("id"),
+            "benchmark": row.get("benchmark") or ("robustness" if str(row.get("id", "")).startswith("ext_") else "curated"),
             "difficulty": row.get("difficulty"),
             "execution_pass": bool(row.get("match")),
             "faithful": faithful_row.get("faithful"),
@@ -1041,6 +1059,9 @@ else:
             metric_cols[2].metric("Numeric Grounding", "Missing")
         metric_cols[3].metric("Gold Questions", execution["total"])
 
+        st.markdown('<div class="section-title">Benchmark Breakdown</div>', unsafe_allow_html=True)
+        render_light_dataframe(benchmark_dataframe(eval_results))
+
         chart_cols = st.columns(3, gap="large")
         with chart_cols[0]:
             diff_df = difficulty_dataframe(execution)
@@ -1065,4 +1086,5 @@ else:
         st.markdown('<div class="section-title">Question-Level Results</div>', unsafe_allow_html=True)
         table = merged_eval_table(eval_results, faithfulness_results)
         render_light_dataframe(table)
+
 

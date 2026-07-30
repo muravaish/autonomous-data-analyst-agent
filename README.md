@@ -111,9 +111,16 @@ Current saved evaluation results:
 
 | Evaluation Type | Result |
 |---|---:|
-| Execution accuracy | 20/20 (100.0%) |
-| Insight faithfulness | 20/20 (100.0%) |
-| Numeric grounding | 30/30 (100.0%) |
+| Combined execution accuracy | 27/30 (90.0%) |
+| Insight faithfulness | 30/30 (100.0%) |
+| Numeric grounding | 41/41 (100.0%) |
+
+Execution accuracy by benchmark set:
+
+| Benchmark | Result |
+|---|---:|
+| Curated Olist gold set | 20/20 (100.0%) |
+| Extended robustness set | 7/10 (70.0%) |
 
 Execution accuracy by difficulty:
 
@@ -121,7 +128,9 @@ Execution accuracy by difficulty:
 |---|---:|
 | Easy | 8/8 (100.0%) |
 | Medium | 6/6 (100.0%) |
-| Hard | 6/6 (100.0%) |
+| Hard | 10/13 (76.9%) |
+
+These results are not a claim of universal correctness. They report performance on the current curated and extended Olist benchmarks; accuracy can vary on unseen datasets, ambiguous questions, or domains without metric definitions.
 
 The evaluation layer checks two things:
 
@@ -243,7 +252,8 @@ DATABASE_SCHEMA=public
 | `business_rules.py` | KPI detection and deterministic recommendation rules |
 | `eval_harness.py` | Execution accuracy evaluation |
 | `faithfulness_harness.py` | Numeric faithfulness evaluation |
-| `gold_qa.json` | Gold-standard question set |
+| `gold_qa.json` | Curated gold-standard question set |
+| `extended_gold_qa.json` | Extended robustness benchmark questions |
 | `assets/screenshots/` | README and portfolio screenshots |
 
 ## Current Limitations
@@ -263,4 +273,5 @@ DATABASE_SCHEMA=public
 ## Portfolio Summary
 
 This project demonstrates an agentic business analytics system that translates natural language into validated SQL, runs analysis on real data, generates faithful insights, visualizes results, and converts findings into deterministic business recommendations.
+
 
