@@ -883,17 +883,6 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-st.markdown(
-    f"""
-    <div class="status-strip">
-      <span class="status-chip"><span class="status-dot"></span>{get_database_backend()}</span>
-      <span class="status-chip"><span class="status-dot"></span>{get_database_dialect()}</span>
-      <span class="status-chip"><span class="status-dot"></span>20 gold checks</span>
-
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
 
 main_view = st.radio("Main view", ["Ask", "Evaluation"], horizontal=True, label_visibility="collapsed", key="main_view")
 
@@ -1091,4 +1080,5 @@ else:
         st.markdown('<div class="section-title">Question-Level Results</div>', unsafe_allow_html=True)
         table = merged_eval_table(eval_results, faithfulness_results)
         render_light_dataframe(table)
+
 
