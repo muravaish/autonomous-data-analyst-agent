@@ -97,6 +97,34 @@ THEME_CSS = """
 .stTabs [aria-selected="true"] div {
   color: var(--blue) !important;
 }
+div[data-testid="stTabs"] button[role="tab"],
+div[data-testid="stTabs"] button[role="tab"] *,
+button[role="tab"],
+button[role="tab"] * {
+  color: #334155 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  font-weight: 700 !important;
+}
+div[data-testid="stTabs"] button[role="tab"] {
+  background: #ffffff !important;
+  border: 1px solid #dbe3ef !important;
+  border-radius: 8px !important;
+  min-height: 42px !important;
+  padding: 8px 16px !important;
+}
+div[data-testid="stTabs"] button[role="tab"][aria-selected="true"],
+div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] * {
+  color: #1d4ed8 !important;
+  background: #eff6ff !important;
+  opacity: 1 !important;
+}
+div[data-testid="stTabs"] button[role="tab"]:hover,
+div[data-testid="stTabs"] button[role="tab"]:hover * {
+  color: #1d4ed8 !important;
+  background: #eff6ff !important;
+  opacity: 1 !important;
+}
 /* Keep Streamlit controls in light theme, including hover/focus states. */
 .stTextInput input,
 .stTextInput input:hover,
@@ -908,4 +936,5 @@ with eval_tab:
         st.markdown('<div class="section-title">Question-Level Results</div>', unsafe_allow_html=True)
         table = merged_eval_table(eval_results, faithfulness_results)
         st.dataframe(table, use_container_width=True, hide_index=True)
+
 
