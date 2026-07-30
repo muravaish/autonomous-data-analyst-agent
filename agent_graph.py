@@ -268,7 +268,19 @@ def chart_agent_node(state: AgentState) -> AgentState:
 
     chart_palette = ["#2563eb", "#0f766e", "#d97706", "#dc2626", "#7c3aed", "#0891b2", "#65a30d", "#ea580c"]
     question_text = str(title).lower()
-    pie_requested = any(token in question_text for token in ["percentage", "percent", "share", "proportion", "distribution", "breakdown", "split", "composition"])
+
+    def has_any(tokens: list[str]) -> bool:
+        return any(token in question_text for token in tokens)
+
+    pie_requested = has_any(["pie", "donut", "percentage", "percent", "share", "proportion", "composition", "split", "breakdown"])
+    line_requested = has_any(["trend", "over time", "timeline", "monthly", "daily", "weekly", "yearly", "by month", "by date", "line graph", "line chart"])
+    scatter_requested = has_any(["scatter", "relationship", "correlation", " vs ", " versus ", "against", "compare relationship"])
+    histogram_requested = has_any(["histogram", "frequency", "spread", "distribution of"])
+    rank_requested = has_any(["top", "highest", "lowest", "rank", "ranking", "compare", "comparison", "by "])
+
+    def preferred_numeric(columns: list[str]) -> str:
+        priority_terms = ["percent", "percentage", "share", "count", "total", "sum", "avg", "average", "rate", "score", "revenue", "cost"]
+        return next((col for col in columns if any(term in col.lower() for term in priority_terms)), columns[0])
 
     try:
         if len(df) == 1 and num_cols:
@@ -301,17 +313,77 @@ def chart_agent_node(state: AgentState) -> AgentState:
             )
             chart_type = "line"
 
-        elif len(num_cols) >= 2 and not cat_cols:
+        elif scatter_requested and len(num_cols) >= 2:
+            color_col = cat_cols[0] if cat_cols and len(df) <= 40 else None
             fig = px.scatter(
                 df,
                 x=num_cols[0],
                 y=num_cols[1],
                 size=num_cols[2] if len(num_cols) >= 3 else None,
+                color=color_col,
                 title=title,
                 hover_data=df.columns,
                 color_discrete_sequence=chart_palette,
             )
             chart_type = "scatter"
+
+        elif pie_requested and cat_cols and num_cols and 2 <= len(df) <= 25:
+            x_col = cat_cols[0]
+            y_col = preferred_numeric(num_cols)
+            plot_df = df.sort_values(y_col, ascending=False).head(15)
+            fig = px.pie(
+                plot_df,
+                names=x_col,
+                values=y_col,
+                title=f"{y_col} Distribution by {x_col}",
+                color_discrete_sequence=chart_palette,
+                hole=0.35,
+            )
+            fig.update_traces(
+                textinfo="percent+label",
+                textposition="inside",
+                insidetextfont=dict(color="#ffffff", size=13),
+                outsidetextfont=dict(color="#172033", size=12),
+                marker=dict(line=dict(color="#ffffff", width=2)),
+            )
+            chart_type = "pie"
+
+        elif line_requested and cat_cols and num_cols and len(df) <= 60:
+            x_col = cat_cols[0]
+            y_cols = num_cols[:3]
+            fig = px.line(
+                df,
+                x=x_col,
+                y=y_cols,
+                markers=True,
+                title=title,
+                labels={"value": "Value", "variable": "Metric"},
+                color_discrete_sequence=chart_palette,
+            )
+            chart_type = "line"
+
+        elif len(num_cols) >= 2 and not cat_cols:
+            if histogram_requested and not scatter_requested:
+                fig = px.histogram(
+                    df,
+                    x=num_cols[0],
+                    nbins=min(30, max(8, len(df) // 2)),
+                    title=f"Distribution of {num_cols[0]}",
+                    color_discrete_sequence=chart_palette,
+                )
+                fig.update_traces(marker_color="#2563eb")
+                chart_type = "histogram"
+            else:
+                fig = px.scatter(
+                    df,
+                    x=num_cols[0],
+                    y=num_cols[1],
+                    size=num_cols[2] if len(num_cols) >= 3 else None,
+                    title=title,
+                    hover_data=df.columns,
+                    color_discrete_sequence=chart_palette,
+                )
+                chart_type = "scatter"
 
         elif len(num_cols) >= 2 and cat_cols:
             x_col = cat_cols[0]
@@ -330,39 +402,19 @@ def chart_agent_node(state: AgentState) -> AgentState:
 
         elif cat_cols and num_cols:
             x_col = cat_cols[0]
-            y_col = next((col for col in num_cols if any(token in col.lower() for token in ["percent", "percentage", "share", "count", "total"])), num_cols[0])
-
-            if pie_requested and 2 <= len(df) <= 25:
-                plot_df = df.sort_values(y_col, ascending=False).head(15)
-                fig = px.pie(
-                    plot_df,
-                    names=x_col,
-                    values=y_col,
-                    title=f"{y_col} Distribution by {x_col}",
-                    color_discrete_sequence=chart_palette,
-                    hole=0.35,
-                )
-                fig.update_traces(
-                    textinfo="percent+label",
-                    textposition="inside",
-                    insidetextfont=dict(color="#ffffff", size=13),
-                    outsidetextfont=dict(color="#172033", size=12),
-                    marker=dict(line=dict(color="#ffffff", width=2)),
-                )
-                chart_type = "pie"
-            else:
-                plot_df = df.sort_values(y_col, ascending=True).tail(15)
-                fig = px.bar(
-                    plot_df,
-                    x=y_col,
-                    y=x_col,
-                    orientation="h",
-                    title=f"{y_col} by {x_col}",
-                    labels={x_col: x_col, y_col: y_col},
-                    color_discrete_sequence=chart_palette,
-                )
-                fig.update_traces(marker_color="#2563eb")
-                chart_type = "horizontal_bar"
+            y_col = preferred_numeric(num_cols)
+            plot_df = df.sort_values(y_col, ascending=True).tail(15)
+            fig = px.bar(
+                plot_df,
+                x=y_col,
+                y=x_col,
+                orientation="h",
+                title=f"{y_col} by {x_col}",
+                labels={x_col: x_col, y_col: y_col},
+                color_discrete_sequence=chart_palette,
+            )
+            fig.update_traces(marker_color="#2563eb")
+            chart_type = "horizontal_bar"
 
         elif num_cols and len(df) > 1:
             fig = px.histogram(
@@ -404,7 +456,6 @@ def chart_agent_node(state: AgentState) -> AgentState:
         print(f"[CHART AGENT] Chart generation failed: {e}")
 
     return state
-
 def end_with_error_node(state: AgentState) -> AgentState:
     print(f"\n[STOPPED] {state.get('error', 'Unknown error')}")
     return state
