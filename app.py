@@ -728,7 +728,7 @@ def render_eval_bar_chart(df: pd.DataFrame, x_col: str, y_col: str, title: str) 
         x=x_col,
         y=y_col,
         text=text_values,
-        title=title,
+        title=None,
         color_discrete_sequence=["#2563eb"],
     )
     fig.update_traces(
@@ -742,7 +742,7 @@ def render_eval_bar_chart(df: pd.DataFrame, x_col: str, y_col: str, title: str) 
     fig.update_layout(
         template="plotly_white",
         height=360,
-        margin=dict(l=40, r=20, t=58, b=105),
+        margin=dict(l=40, r=20, t=20, b=105),
         paper_bgcolor="#ffffff",
         plot_bgcolor="#ffffff",
         font=dict(color="#172033"),
