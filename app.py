@@ -944,7 +944,17 @@ if main_view == "Ask":
         if run_clicked and typed_question.strip():
             effective_question = resolve_follow_up(typed_question.strip(), st.session_state.chat_runs)
             with st.spinner("Running analysis..."):
-                final_state = run_agent(effective_question)
+                try:
+                    final_state = run_agent(effective_question)
+                except Exception as exc:
+                    final_state = initial_state(effective_question)
+                    final_state["display_question"] = typed_question.strip()
+                    final_state["error"] = (
+                        "The analysis could not finish because the AI service returned an error. "
+                        "Please try a smaller result question, upload a smaller CSV, or rerun after a moment."
+                    )
+                    final_state["insight"] = final_state["error"]
+                    final_state["validation_message"] = str(exc)[:300]
             final_state["display_question"] = typed_question.strip()
             st.session_state.chat_runs.insert(0, final_state)
 
@@ -1080,5 +1090,4 @@ else:
         st.markdown('<div class="section-title">Question-Level Results</div>', unsafe_allow_html=True)
         table = merged_eval_table(eval_results, faithfulness_results)
         render_light_dataframe(table)
-
 

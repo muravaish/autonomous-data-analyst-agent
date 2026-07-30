@@ -208,26 +208,42 @@ def insight_agent_node(state: AgentState) -> AgentState:
         state["insight"] = f"Could not generate insight due to an earlier error: {state['error']}"
         return state
 
-    data_preview = list(zip(state["columns"], state["rows"][0])) if state["rows"] else []
+    preview_limit = 50
+    rows = state.get("rows", [])
+    row_preview = rows[:preview_limit]
+    omitted_count = max(0, len(rows) - len(row_preview))
 
     prompt = f"""You are a data analyst. Write a short (2-4 sentence) business insight
-answering the question below, using ONLY the data provided. Do not invent any
-numbers that are not present in the data. If the data doesn't fully answer the
-question, say so honestly.
+answering the question below, using ONLY the data preview provided. Do not invent
+numbers that are not present in the data preview. If the preview doesn't fully
+answer the question, say so honestly.
 
 Question: {state['question']}
 
 Result columns: {state['columns']}
-Result rows (all of them): {state['rows']}
+Rows returned by SQL: {state.get('row_count', len(rows))}
+Rows shown in preview: {len(row_preview)}
+Rows omitted from prompt: {omitted_count}
+Result row preview: {row_preview}
 
 Write the insight now:"""
 
-    insight = call_gemini_with_retry(prompt)
+    try:
+        insight = call_gemini_with_retry(prompt)
+    except Exception as e:
+        print(f"[INSIGHT AGENT] Gemini insight failed: {e}")
+        if row_preview:
+            insight = (
+                f"The SQL query returned {state.get('row_count', len(rows))} row(s). "
+                "A narrative insight could not be generated because the language model request failed, "
+                "but the validated SQL result, table, and chart are still available for review."
+            )
+        else:
+            insight = "The SQL query did not return rows, so no grounded narrative insight could be generated."
+
     print(f"[INSIGHT AGENT] {insight}")
     state["insight"] = insight
     return state
-
-
 # ============================================================
 # NODE 5: BUSINESS RULES / RECOMMENDATION LAYER
 # Converts analytical facts into deterministic business actions.
@@ -579,6 +595,4 @@ if __name__ == "__main__":
     print(f"Recommendation: {final_state.get('recommendation')} ({final_state.get('priority')})")
     print(f"Action: {final_state.get('recommended_action')}")
     print(f"Chart: {final_state['chart_path']}")
-
-
 
