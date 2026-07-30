@@ -327,10 +327,17 @@ def chart_agent_node(state: AgentState) -> AgentState:
             )
             chart_type = "scatter"
 
-        elif pie_requested and cat_cols and num_cols and 2 <= len(df) <= 25:
+        elif pie_requested and cat_cols and num_cols and len(df) >= 2:
             x_col = cat_cols[0]
             y_col = preferred_numeric(num_cols)
-            plot_df = df.sort_values(y_col, ascending=False).head(15)
+            plot_df = df.sort_values(y_col, ascending=False)
+            if len(plot_df) > 12:
+                top_df = plot_df.head(11).copy()
+                other_value = plot_df.iloc[11:][y_col].sum()
+                other_row = {column: "" for column in plot_df.columns}
+                other_row[x_col] = "Other"
+                other_row[y_col] = other_value
+                plot_df = pd.concat([top_df, pd.DataFrame([other_row])], ignore_index=True)
             fig = px.pie(
                 plot_df,
                 names=x_col,
@@ -530,4 +537,5 @@ if __name__ == "__main__":
     print(f"Recommendation: {final_state.get('recommendation')} ({final_state.get('priority')})")
     print(f"Action: {final_state.get('recommended_action')}")
     print(f"Chart: {final_state['chart_path']}")
+
 
