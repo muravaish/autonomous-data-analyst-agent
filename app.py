@@ -7,6 +7,7 @@ import sqlite3
 from pathlib import Path
 
 import pandas as pd
+import plotly.express as px
 import streamlit as st
 import streamlit.components.v1 as components
 
@@ -705,6 +706,54 @@ def merged_eval_table(eval_results: list[dict], faithfulness_results: list[dict]
     return pd.DataFrame(rows)
 
 
+
+def render_eval_bar_chart(df: pd.DataFrame, x_col: str, y_col: str, title: str) -> None:
+    if df.empty:
+        st.info("No data available for this chart.")
+        return
+    plot_df = df.copy()
+    plot_df[x_col] = plot_df[x_col].map(clean_label)
+    if y_col == "accuracy":
+        plot_df[y_col] = plot_df[y_col].astype(float)
+        text_values = plot_df[y_col].map(lambda value: f"{value:.0%}")
+        y_title = "Accuracy"
+        y_range = [0, 1.08]
+    else:
+        text_values = plot_df[y_col].map(lambda value: f"{value:g}")
+        y_title = "Count"
+        y_range = None
+
+    fig = px.bar(
+        plot_df,
+        x=x_col,
+        y=y_col,
+        text=text_values,
+        title=title,
+        color_discrete_sequence=["#2563eb"],
+    )
+    fig.update_traces(
+        marker_color="#2563eb",
+        marker_line_color="#1d4ed8",
+        marker_line_width=1,
+        textposition="outside",
+        textfont=dict(color="#172033", size=12),
+        hovertemplate=f"%{{x}}<br>{y_title}: %{{y}}<extra></extra>",
+    )
+    fig.update_layout(
+        template="plotly_white",
+        height=360,
+        margin=dict(l=40, r=20, t=58, b=105),
+        paper_bgcolor="#ffffff",
+        plot_bgcolor="#ffffff",
+        font=dict(color="#172033"),
+        title_font=dict(color="#172033", size=18),
+        showlegend=False,
+        yaxis_range=y_range,
+        hoverlabel=dict(bgcolor="#ffffff", font_color="#172033", bordercolor="#cbd5e1"),
+    )
+    fig.update_xaxes(title_text=clean_label(x_col), tickangle=-35, gridcolor="#eef2f7", tickfont=dict(color="#172033"), title_font=dict(color="#172033"))
+    fig.update_yaxes(title_text=y_title, gridcolor="#e5e7eb", tickfont=dict(color="#172033"), title_font=dict(color="#172033"))
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 def render_chart_from_state(state: dict):
     chart_path = state.get("chart_path")
     if not chart_path:
@@ -997,7 +1046,7 @@ else:
             st.markdown('<div class="section-title">Accuracy By Difficulty</div>', unsafe_allow_html=True)
             diff_df = difficulty_dataframe(execution)
             if not diff_df.empty:
-                st.bar_chart(diff_df, x="difficulty", y="accuracy")
+                render_eval_bar_chart(diff_df, "difficulty", "accuracy", "Accuracy By Difficulty")
                 render_light_dataframe(diff_df)
 
         with chart_cols[1]:
@@ -1006,14 +1055,14 @@ else:
             if fail_df.empty:
                 st.success("No execution failures in the saved file.")
             else:
-                st.bar_chart(fail_df, x="failure_category", y="count")
+                render_eval_bar_chart(fail_df, "failure_category", "count", "Failure Types")
                 render_light_dataframe(fail_df)
 
         with chart_cols[2]:
             st.markdown('<div class="section-title">Recommendation Rules</div>', unsafe_allow_html=True)
             rec_df = recommendation_rule_dataframe(eval_results)
             if not rec_df.empty:
-                st.bar_chart(rec_df, x="recommendation_rule", y="count")
+                render_eval_bar_chart(rec_df, "recommendation_rule", "count", "Recommendation Rules")
                 render_light_dataframe(rec_df)
 
         st.markdown('<div class="section-title">Question-Level Results</div>', unsafe_allow_html=True)
