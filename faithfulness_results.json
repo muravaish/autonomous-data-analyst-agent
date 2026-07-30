@@ -94,21 +94,6 @@
     "insight": "The average review score for orders that were delivered late is approximately 2.57. This indicates that late deliveries are generally associated with low customer satisfaction ratings."
   },
   {
-    "id": "gold_005",
-    "difficulty": "hard",
-    "question": "Among orders that were delivered late, which product category has the highest average delivery delay in days?",
-    "execution_match": false,
-    "faithful": true,
-    "faithfulness_score": 1.0,
-    "numbers_mentioned": 0,
-    "numbers_checked": 0,
-    "numbers_grounded": 0,
-    "numbers_ignored_as_context": 0,
-    "possible_hallucinations": [],
-    "checked_numbers": [],
-    "insight": "Could not generate insight due to an earlier error: SQL execution failed: ambiguous column name: product_category_name"
-  },
-  {
     "id": "gold_006",
     "difficulty": "easy",
     "question": "How many unique customers are there in total?",
@@ -173,62 +158,6 @@
       }
     ],
     "insight": "Based on the provided data, the average freight cost is approximately 32.09% of the item price. However, the data does not provide additional context, such as the sample size, product categories, or time period, to further evaluate this percentage."
-  },
-  {
-    "id": "gold_009",
-    "difficulty": "hard",
-    "question": "Which seller generated the highest total revenue, and across how many distinct orders?",
-    "execution_match": false,
-    "faithful": true,
-    "faithfulness_score": 1.0,
-    "numbers_mentioned": 2,
-    "numbers_checked": 2,
-    "numbers_grounded": 2,
-    "numbers_ignored_as_context": 0,
-    "possible_hallucinations": [],
-    "checked_numbers": [
-      {
-        "raw": "229,472.63",
-        "value": 229472.63,
-        "status": "grounded",
-        "matched_data_value": 229472.63
-      },
-      {
-        "raw": "1,132",
-        "value": 1132.0,
-        "status": "grounded",
-        "matched_data_value": 1132.0
-      }
-    ],
-    "insight": "Seller ID '4869f7a5dfa277a7dca6462dcf3b52b2' generated the highest total revenue in the dataset, bringing in 229,472.63. This total revenue was accumulated across a total of 1,132 distinct orders."
-  },
-  {
-    "id": "gold_010",
-    "difficulty": "hard",
-    "question": "Among 1-star reviews, what percentage of those orders were delivered late?",
-    "execution_match": false,
-    "faithful": true,
-    "faithfulness_score": 1.0,
-    "numbers_mentioned": 2,
-    "numbers_checked": 1,
-    "numbers_grounded": 1,
-    "numbers_ignored_as_context": 1,
-    "possible_hallucinations": [],
-    "checked_numbers": [
-      {
-        "raw": "1",
-        "value": 1.0,
-        "status": "ignored_context_number",
-        "matched_data_value": null
-      },
-      {
-        "raw": "31.19%",
-        "value": 31.19,
-        "status": "grounded",
-        "matched_data_value": 31.1945931712455
-      }
-    ],
-    "insight": "Among 1-star reviews, approximately 31.19% of those orders were delivered late. This indicates that roughly one-third of the lowest-rated orders experienced delivery delays."
   },
   {
     "id": "gold_011",
@@ -509,5 +438,83 @@
       }
     ],
     "insight": "A total of 2,997 customers made more than one purchase. The provided data does not contain the total number of customers overall, so it is not possible to determine what percentage of the customer base this represents."
+  },
+  {
+    "id": "gold_005",
+    "difficulty": "hard",
+    "question": "Among orders that were delivered late, which product category has the highest average delivery delay in days?",
+    "execution_match": true,
+    "faithful": true,
+    "faithfulness_score": 1.0,
+    "numbers_mentioned": 1,
+    "numbers_checked": 1,
+    "numbers_grounded": 1,
+    "numbers_ignored_as_context": 0,
+    "possible_hallucinations": [],
+    "checked_numbers": [
+      {
+        "raw": "19.93",
+        "value": 19.93,
+        "status": "grounded",
+        "matched_data_value": 19.926121238415362
+      }
+    ],
+    "insight": "Among orders that were delivered late, the product category with the highest average delivery delay is home_appliances_2, with an average delay of approximately 19.93 days."
+  },
+  {
+    "id": "gold_009",
+    "difficulty": "hard",
+    "question": "Which seller generated the highest total revenue, and across how many distinct orders?",
+    "execution_match": true,
+    "faithful": true,
+    "faithfulness_score": 1.0,
+    "numbers_mentioned": 2,
+    "numbers_checked": 2,
+    "numbers_grounded": 2,
+    "numbers_ignored_as_context": 0,
+    "possible_hallucinations": [],
+    "checked_numbers": [
+      {
+        "raw": "249,640.7",
+        "value": 249640.7,
+        "status": "grounded",
+        "matched_data_value": 249640.7
+      },
+      {
+        "raw": "1,132",
+        "value": 1132.0,
+        "status": "grounded",
+        "matched_data_value": 1132.0
+      }
+    ],
+    "insight": "Seller `4869f7a5dfa277a7dca6462dcf3b52b2` generated the highest total revenue of 249,640.7. This revenue was accumulated across a total of 1,132 distinct orders."
+  },
+  {
+    "id": "gold_010",
+    "difficulty": "hard",
+    "question": "Among 1-star reviews, what percentage of those orders were delivered late?",
+    "execution_match": true,
+    "faithful": true,
+    "faithfulness_score": 1.0,
+    "numbers_mentioned": 2,
+    "numbers_checked": 1,
+    "numbers_grounded": 1,
+    "numbers_ignored_as_context": 1,
+    "possible_hallucinations": [],
+    "checked_numbers": [
+      {
+        "raw": "37.77%",
+        "value": 37.77,
+        "status": "grounded",
+        "matched_data_value": 37.772345626527795
+      },
+      {
+        "raw": "1",
+        "value": 1.0,
+        "status": "ignored_context_number",
+        "matched_data_value": null
+      }
+    ],
+    "insight": "Based on the data, 37.77% of orders with 1-star reviews were delivered late."
   }
 ]

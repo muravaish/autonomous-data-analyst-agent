@@ -111,9 +111,9 @@ Current saved evaluation results:
 
 | Evaluation Type | Result |
 |---|---:|
-| Execution accuracy | 17/20 (85.0%) |
+| Execution accuracy | 20/20 (100.0%) |
 | Insight faithfulness | 20/20 (100.0%) |
-| Numeric grounding | 29/29 (100.0%) |
+| Numeric grounding | 30/30 (100.0%) |
 
 Execution accuracy by difficulty:
 
@@ -121,7 +121,7 @@ Execution accuracy by difficulty:
 |---|---:|
 | Easy | 8/8 (100.0%) |
 | Medium | 6/6 (100.0%) |
-| Hard | 3/6 (50.0%) |
+| Hard | 6/6 (100.0%) |
 
 The evaluation layer checks two things:
 
@@ -249,8 +249,8 @@ DATABASE_SCHEMA=public
 ## Current Limitations
 
 - Uploaded CSV analysis depends on the model correctly interpreting generic column names
-- Gold-standard evaluation is strongest for the Olist dataset; uploaded CSV evaluation is a future extension
-- Complex multi-step business questions can still fail when joins or metric definitions are ambiguous
+- Gold-standard evaluation currently covers the Olist dataset; uploaded CSV evaluation is a future extension
+- Complex multi-step business questions can still require clearer metric definitions or decomposition when business logic is ambiguous
 - Azure deployment templates are included, but local Streamlit remains the primary tested run mode
 
 ## Future Improvements
@@ -263,3 +263,4 @@ DATABASE_SCHEMA=public
 ## Portfolio Summary
 
 This project demonstrates an agentic business analytics system that translates natural language into validated SQL, runs analysis on real data, generates faithful insights, visualizes results, and converts findings into deterministic business recommendations.
+

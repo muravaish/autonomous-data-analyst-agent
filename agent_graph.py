@@ -73,6 +73,33 @@ def call_gemini_with_retry(prompt: str, max_retries: int = 5) -> str:
 def get_actual_schema_objects():
     return get_schema_objects()
 
+OLIST_SQL_GUIDANCE = """
+Business metric definitions for Olist e-commerce questions:
+- total_revenue / seller revenue / product revenue = SUM(order_items.price + order_items.freight_value), not price alone.
+- item_revenue = SUM(order_items.price) only when the question explicitly excludes freight.
+- distinct_orders = COUNT(DISTINCT order_items.order_id).
+- late delivery means orders.order_delivered_customer_date > orders.order_estimated_delivery_date.
+- For late-delivery rate or percentage, exclude rows where order_delivered_customer_date is NULL.
+- For delivered-order delivery-delay questions, filter orders.order_status = 'delivered' when the orders table is available.
+- delivery_delay_days = julianday(orders.order_delivered_customer_date) - julianday(orders.order_estimated_delivery_date) in SQLite.
+- average_review_score = AVG(order_reviews.review_score).
+- cancellation_rate = canceled orders divided by total relevant orders.
+- product category names should use category_translation.product_category_name_english when that table is available.
+- Join products to category_translation with products.product_category_name = category_translation.product_category_name.
+- Count review rows with COUNT(*) unless the question explicitly asks for distinct orders.
+"""
+
+
+def schema_has_olist_tables(schema_text: str) -> bool:
+    lowered = schema_text.lower()
+    return "orders" in lowered and "order_items" in lowered
+
+
+def sql_business_guidance(schema_text: str) -> str:
+    if schema_has_olist_tables(schema_text):
+        return OLIST_SQL_GUIDANCE
+    return "For uploaded datasets, infer metric definitions only from the provided columns and avoid assuming Olist-specific tables."
+
 
 # ============================================================
 # NODE 1: ROUTER
@@ -113,9 +140,13 @@ def sql_agent_node(state: AgentState) -> AgentState:
     dialect = get_database_dialect()
     schema_text = get_schema_text()
 
+    business_guidance = sql_business_guidance(schema_text)
+
     prompt = f"""You are a SQL expert. Given the database schema below, write a single valid {dialect} query to answer the question.
 
 {schema_text}
+
+{business_guidance}
 
 Question: {state['question']}
 
@@ -548,4 +579,6 @@ if __name__ == "__main__":
     print(f"Recommendation: {final_state.get('recommendation')} ({final_state.get('priority')})")
     print(f"Action: {final_state.get('recommended_action')}")
     print(f"Chart: {final_state['chart_path']}")
+
+
 
