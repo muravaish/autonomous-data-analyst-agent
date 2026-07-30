@@ -266,7 +266,7 @@ def chart_agent_node(state: AgentState) -> AgentState:
     chart_path = os.path.join("charts", "latest_chart.html")
     title = state.get("display_question") or state.get("question") or "Analysis Result"
 
-    chart_palette = ["#2563eb", "#0f766e", "#d97706", "#dc2626", "#7c3aed", "#0891b2", "#65a30d", "#ea580c"]
+    chart_palette = ["#2563eb", "#0f766e", "#d97706", "#7c3aed", "#0891b2", "#94a3b8"]
     question_text = str(title).lower()
 
     def has_any(tokens: list[str]) -> bool:
@@ -331,9 +331,9 @@ def chart_agent_node(state: AgentState) -> AgentState:
             x_col = cat_cols[0]
             y_col = preferred_numeric(num_cols)
             plot_df = df.sort_values(y_col, ascending=False)
-            if len(plot_df) > 12:
-                top_df = plot_df.head(11).copy()
-                other_value = plot_df.iloc[11:][y_col].sum()
+            if len(plot_df) > 6:
+                top_df = plot_df.head(5).copy()
+                other_value = plot_df.iloc[5:][y_col].sum()
                 other_row = {column: "" for column in plot_df.columns}
                 other_row[x_col] = "Other"
                 other_row[y_col] = other_value
@@ -344,7 +344,7 @@ def chart_agent_node(state: AgentState) -> AgentState:
                 values=y_col,
                 title=f"{y_col} Distribution by {x_col}",
                 color_discrete_sequence=chart_palette,
-                hole=0.35,
+                hole=0,
             )
             fig.update_traces(
                 textinfo="percent+label",
@@ -537,5 +537,6 @@ if __name__ == "__main__":
     print(f"Recommendation: {final_state.get('recommendation')} ({final_state.get('priority')})")
     print(f"Action: {final_state.get('recommended_action')}")
     print(f"Chart: {final_state['chart_path']}")
+
 
 
