@@ -282,6 +282,12 @@ def chart_agent_node(state: AgentState) -> AgentState:
         priority_terms = ["percent", "percentage", "share", "count", "total", "sum", "avg", "average", "rate", "score", "revenue", "cost"]
         return next((col for col in columns if any(term in col.lower() for term in priority_terms)), columns[0])
 
+    def clean_chart_label(value: str) -> str:
+        label = str(value).replace("Distribution Distribution", "Distribution")
+        for prefix in ["Percentage Distribution", "Percent Distribution", "Percentage", "Percent", "Share"]:
+            label = label.replace(prefix, "").strip()
+        return label or str(value)
+
     try:
         if len(df) == 1 and num_cols:
             metric_df = df[num_cols].T.reset_index()
@@ -338,17 +344,19 @@ def chart_agent_node(state: AgentState) -> AgentState:
                 other_row[x_col] = "Other"
                 other_row[y_col] = other_value
                 plot_df = pd.concat([top_df, pd.DataFrame([other_row])], ignore_index=True)
+            category_label = clean_chart_label(x_col)
             fig = px.pie(
                 plot_df,
                 names=x_col,
                 values=y_col,
-                title=f"{y_col} Distribution by {x_col}",
+                title=f"{category_label} Distribution",
                 color_discrete_sequence=chart_palette,
                 hole=0,
             )
+            fig.update_layout(legend_title_text=category_label)
             fig.update_traces(
                 textinfo="percent+label",
-                textposition="inside",
+                textposition="auto",
                 insidetextfont=dict(color="#ffffff", size=13),
                 outsidetextfont=dict(color="#172033", size=12),
                 marker=dict(line=dict(color="#ffffff", width=2)),
@@ -537,6 +545,7 @@ if __name__ == "__main__":
     print(f"Recommendation: {final_state.get('recommendation')} ({final_state.get('priority')})")
     print(f"Action: {final_state.get('recommended_action')}")
     print(f"Chart: {final_state['chart_path']}")
+
 
 
 
