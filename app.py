@@ -125,6 +125,41 @@ div[data-testid="stTabs"] button[role="tab"]:hover * {
   background: #eff6ff !important;
   opacity: 1 !important;
 }
+/* Visible navigation controls used instead of Streamlit tabs. */
+div[role="radiogroup"] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 4px 0 18px 0;
+}
+div[role="radiogroup"] label {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 8px !important;
+  padding: 8px 14px !important;
+  min-height: 42px !important;
+  box-shadow: 0 1px 2px rgba(16,24,40,.04) !important;
+}
+div[role="radiogroup"] label,
+div[role="radiogroup"] label *,
+div[role="radiogroup"] label:hover,
+div[role="radiogroup"] label:hover * {
+  color: #334155 !important;
+  -webkit-text-fill-color: #334155 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  font-weight: 700 !important;
+}
+div[role="radiogroup"] label:has(input:checked) {
+  background: #eff6ff !important;
+  border-color: #2563eb !important;
+}
+div[role="radiogroup"] label:has(input:checked),
+div[role="radiogroup"] label:has(input:checked) * {
+  color: #2563eb !important;
+  -webkit-text-fill-color: #2563eb !important;
+}
+div[role="radiogroup"] input { display: none !important; }
 /* Keep Streamlit controls in light theme, including hover/focus states. */
 .stTextInput input,
 .stTextInput input:hover,
@@ -741,9 +776,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-chat_tab, eval_tab = st.tabs(["Ask", "Evaluation"])
+main_view = st.radio("Main view", ["Ask", "Evaluation"], horizontal=True, label_visibility="collapsed", key="main_view")
 
-with chat_tab:
+if main_view == "Ask":
     left, right = st.columns([0.67, 0.33], gap="large")
 
     with left:
@@ -816,9 +851,9 @@ with chat_tab:
             top_metrics[2].metric("Priority", latest.get("priority") or "Low")
             top_metrics[3].metric("Chart", clean_label(latest.get("chart_type") or "None"))
 
-            answer_tab, chart_tab, data_tab, sql_tab = st.tabs(["Answer", "Chart", "Data", "SQL Query"])
+            result_view = st.radio("Result view", ["Answer", "Chart", "Data", "SQL Query"], horizontal=True, label_visibility="collapsed", key=f"result_view_{len(st.session_state.chat_runs)}")
 
-            with answer_tab:
+            if result_view == "Answer":
                 render_recommendation(latest)
                 render_panel("Insight", latest.get("insight") or "No insight returned.")
                 st.download_button(
@@ -829,13 +864,13 @@ with chat_tab:
                     use_container_width=True,
                 )
 
-            with chart_tab:
+            elif result_view == "Chart":
                 render_chart_from_state(latest)
 
-            with data_tab:
+            elif result_view == "Data":
                 st.dataframe(result_dataframe(latest), use_container_width=True, hide_index=True)
 
-            with sql_tab:
+            else:
                 sql_text = html.escape(latest.get("sql") or "No SQL returned.")
                 explanation_items = "".join(f"<li>{html.escape(str(item))}</li>" for item in latest.get("sql_explanation", []))
                 if not explanation_items:
@@ -888,7 +923,7 @@ with chat_tab:
         else:
             render_panel("Standing by", "Run a question to see validation, KPIs, and tables.")
 
-with eval_tab:
+else:
     st.markdown('<div class="section-title">Evaluation Overview</div>', unsafe_allow_html=True)
     eval_results = load_json(EVAL_RESULTS_PATH)
     faithfulness_results = load_json(FAITHFULNESS_RESULTS_PATH)
@@ -936,5 +971,6 @@ with eval_tab:
         st.markdown('<div class="section-title">Question-Level Results</div>', unsafe_allow_html=True)
         table = merged_eval_table(eval_results, faithfulness_results)
         st.dataframe(table, use_container_width=True, hide_index=True)
+
 
 
