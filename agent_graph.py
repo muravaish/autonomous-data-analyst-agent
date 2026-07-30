@@ -286,9 +286,12 @@ def chart_agent_node(state: AgentState) -> AgentState:
         label = str(value).replace("Distribution Distribution", "Distribution")
         for prefix in ["Percentage Distribution", "Percent Distribution", "Percentage", "Percent", "Share"]:
             label = label.replace(prefix, "").strip()
+        label = label.replace("Condition Text", "Weather Condition")
         return label or str(value)
 
     try:
+        legend_title = "Metric"
+
         if len(df) == 1 and num_cols:
             metric_df = df[num_cols].T.reset_index()
             metric_df.columns = ["Metric", "Value"]
@@ -353,7 +356,7 @@ def chart_agent_node(state: AgentState) -> AgentState:
                 color_discrete_sequence=chart_palette,
                 hole=0,
             )
-            fig.update_layout(legend_title_text=category_label)
+            legend_title = category_label
             fig.update_traces(
                 textinfo="percent+label",
                 textposition="auto",
@@ -452,7 +455,7 @@ def chart_agent_node(state: AgentState) -> AgentState:
             template="plotly_white",
             height=520,
             margin=dict(l=60, r=30, t=70, b=70),
-            legend_title_text="Metric",
+            legend_title_text=legend_title,
             paper_bgcolor="#ffffff",
             plot_bgcolor="#ffffff",
             font=dict(color="#172033"),
@@ -545,7 +548,4 @@ if __name__ == "__main__":
     print(f"Recommendation: {final_state.get('recommendation')} ({final_state.get('priority')})")
     print(f"Action: {final_state.get('recommended_action')}")
     print(f"Chart: {final_state['chart_path']}")
-
-
-
 
